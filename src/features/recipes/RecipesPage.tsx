@@ -85,8 +85,8 @@ export function RecipesPage({ prepMode = false }: { prepMode?: boolean } = {}) {
   const { map: usersMap } = useUsersMap();
   const dupMut = useDuplicateRecipe();
 
-  // "Updated by" is visible only to admins and editors.
-  const showUpdatedBy = user.role === "admin" || user.role === "editor";
+  // "Updated by" attribution is for staff roles, not external viewers.
+  const showUpdatedBy = user.role !== "viewer";
 
   const criticalPct = Number(
     settings.find((s) => s.key === "margin_alert_pct")?.value ?? 35,
