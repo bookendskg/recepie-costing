@@ -4,8 +4,6 @@ import {
   PackageX,
   Banknote,
   Timer,
-  TrendingDown,
-  TrendingUp,
   Calendar,
   FileDown,
   MoreVertical,
@@ -21,17 +19,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn, formatINR } from "@/lib/utils";
-import type { Brand } from "@/lib/data/types";
 import { BRANDS } from "@/lib/data/types";
+import type { BrandSelection } from "./BrandFilter";
 import { useRecipes } from "@/features/recipes/hooks";
 import { useFoodCostPct } from "@/features/settings/hooks";
 import { useAllRecipeIngredients } from "@/features/reports/hooks";
 import { foodCostPctOf, menuPriceOf } from "@/features/recipes/recipeMetrics";
 
-// Brand accent theming for the operations dashboard.
-const THEME: Record<Brand, { bar: string; accentText: string }> = {
-  aiko: { bar: "bg-amber-400", accentText: "text-amber-600" },
-  capiche: { bar: "bg-[#ed1c24]", accentText: "text-[#ed1c24]" },
+// Brand accent theming for the operations dashboard data lines.
+const THEME: Record<BrandSelection, { bar: string; accentText: string }> = {
+  all: { bar: "bg-[#1b35a8]", accentText: "text-[#1b35a8]" }, // BOOKENDS blue
+  capiche: { bar: "bg-[#ed1c24]", accentText: "text-[#ed1c24]" }, // Capiche red
+  aiko: { bar: "bg-amber-400", accentText: "text-amber-600" }, // Aiko gold
 };
 
 // Illustrative ops figures (no POS/inventory feed in this build).
@@ -48,14 +47,17 @@ const STATUS_STYLE: Record<string, string> = {
 };
 const STATUS_LABEL: Record<string, string> = { critical: "Critical", low: "Low", atrisk: "At Risk" };
 
-export function OperationsDashboard({ brand }: { brand: Brand }) {
+export function OperationsDashboard({ brand }: { brand: BrandSelection }) {
   const t = THEME[brand];
-  const brandLabel = BRANDS.find((b) => b.value === brand)?.label ?? brand;
+  const brandLabel = brand === "all" ? "BOOKENDS" : BRANDS.find((b) => b.value === brand)?.label ?? brand;
   const { data: recipes = [] } = useRecipes();
   const { data: foodCostPct = 30 } = useFoodCostPct();
   const ingredients = useAllRecipeIngredients();
 
-  const items = useMemo(() => recipes.filter((r) => r.brand === brand && !r.is_prep), [recipes, brand]);
+  const items = useMemo(
+    () => recipes.filter((r) => !r.is_prep && (brand === "all" || r.brand === brand)),
+    [recipes, brand],
+  );
   const itemIds = useMemo(() => new Set(items.map((r) => r.id)), [items]);
 
   const avgFc = useMemo(() => {
@@ -109,22 +111,28 @@ export function OperationsDashboard({ brand }: { brand: Brand }) {
 
       {/* KPI cards */}
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi icon={<PiggyBank className={cn("h-5 w-5", t.accentText)} />} label="Food Cost %" value={`${avgFc.toFixed(1)}%`} delta={{ text: "1.2%", good: true }}>
+        <Kpi icon={<PiggyBank className={cn("h-5 w-5", t.accentText)} />} label="Food Cost %" value={`${avgFc.toFixed(1)}%`} delta={{ text: "-1.2%", good: true }}>
           <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
             <div className={cn("h-full rounded-full", t.bar)} style={{ width: `${Math.min(100, avgFc * 2)}%` }} />
           </div>
         </Kpi>
-        <Kpi icon={<PackageX className="h-5 w-5 text-red-500" />} label="Low Stock Alerts" value="12" delta={{ text: "4 today", good: false }}>
+        <Kpi icon={<PackageX className="h-5 w-5 text-red-500" />} label="Low Stock Alerts" value="12" delta={{ text: "+4 today", good: false }}>
           <p className="mt-3 text-xs text-muted-foreground">4 critical actions required</p>
         </Kpi>
-        <Kpi icon={<Banknote className="h-5 w-5 text-emerald-600" />} label="Daily Revenue" value={formatINR(482900).replace(".00", "")} delta={{ text: "8% vs Prev Sat", good: true }} />
-        <Kpi icon={<Timer className="h-5 w-5 text-slate-500" />} label="Avg Ticket Time" value="14.2m" delta={{ text: "0.5m", good: true }}>
-          <p className="mt-3 text-xs text-muted-foreground">Target: 15m</p>
+        <Kpi icon={<Banknote className="h-5 w-5 text-emerald-600" />} label="Daily Revenue" value={formatINR(482900).replace(".00", "")} delta={{ text: "+8.5%", good: true }}>
+          <div className="mt-3 flex h-8 items-end gap-1">
+            {[40, 55, 50, 70, 100].map((h, i) => (
+              <div key={i} className={cn("flex-1 rounded-sm", i === 4 ? t.bar : "bg-muted")} style={{ height: `${h}%` }} />
+            ))}
+          </div>
+        </Kpi>
+        <Kpi icon={<Timer className="h-5 w-5 text-slate-500" />} label="Avg Ticket Time" value="14.2m" delta={{ text: "-0.4m", good: true }}>
+          <p className="mt-3 text-xs text-muted-foreground">Lunch: 12m &nbsp;·&nbsp; Dinner: 18m</p>
         </Kpi>
       </div>
 
-      {/* Inventory (left) + Cost by Category & Margin Watch (right) */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* Inventory (left) + Cost by Category (right) */}
+      <div className="mb-6 grid gap-4 lg:grid-cols-3">
         <Card className="p-5 lg:col-span-2">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-sm font-semibold">Inventory Depletion Alerts</p>
@@ -156,56 +164,62 @@ export function OperationsDashboard({ brand }: { brand: Brand }) {
           </Table>
         </Card>
 
-        <div className="space-y-4">
-          <Card className="p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm font-semibold">Cost by Category</p>
-              <MoreVertical className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <div className="space-y-4">
-              {byCategory.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No data.</p>
-              ) : (
-                byCategory.map((c) => (
-                  <div key={c.name}>
-                    <div className="mb-1 flex items-center justify-between text-sm">
-                      <span>{c.name}</span>
-                      <span className="font-semibold">{c.pct}%</span>
-                    </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                      <div className={cn("h-full rounded-full", t.bar)} style={{ width: `${c.pct}%` }} />
-                    </div>
+        <Card className="p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm font-semibold">Cost by Category</p>
+            <MoreVertical className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="space-y-4">
+            {byCategory.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No data.</p>
+            ) : (
+              byCategory.map((c) => (
+                <div key={c.name}>
+                  <div className="mb-1 flex items-center justify-between text-sm">
+                    <span>{c.name}</span>
+                    <span className="font-semibold">{c.pct}%</span>
                   </div>
-                ))
-              )}
-            </div>
-            <div className="mt-5 space-y-1 border-t pt-4 text-xs">
-              <p className="flex items-center gap-2"><span className={cn("h-2 w-2 rounded-full", t.bar)} /> Theoretical Food Cost: {foodCostPct.toFixed(1)}%</p>
-              <p className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-slate-900" /> Actual Food Cost: {avgFc.toFixed(1)}%</p>
-              <p className="pt-1 italic text-muted-foreground">
-                Variance: {avgFc - foodCostPct >= 0 ? "+" : ""}{(avgFc - foodCostPct).toFixed(1)}% (Check Waste Logs)
-              </p>
-            </div>
-          </Card>
-
-          <Card className="p-5">
-            <p className="text-sm font-semibold">Recipe Margin Watch</p>
-            <p className="mb-4 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Top Loss Leaders</p>
-            <div className="space-y-3">
-              {lossLeaders.map((r) => (
-                <div key={r.name} className="flex items-center justify-between border-b pb-2 last:border-0">
-                  <div>
-                    <p className="font-semibold">{r.name}</p>
-                    <p className="text-[11px] text-muted-foreground">Margin: {r.margin}%</p>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                    <div className={cn("h-full rounded-full", t.bar)} style={{ width: `${c.pct}%` }} />
                   </div>
-                  <span className={cn("font-mono font-bold", t.accentText)}>{formatINR(r.menu).replace(".00", "")}</span>
                 </div>
-              ))}
-            </div>
-            <Button variant="outline" className={cn("mt-4 w-full", t.accentText)}>Recalculate Margins</Button>
-          </Card>
-        </div>
+              ))
+            )}
+          </div>
+          <div className="mt-5 space-y-1 border-t pt-4 text-xs">
+            <p className="flex items-center gap-2"><span className={cn("h-2 w-2 rounded-full", t.bar)} /> Theoretical Food Cost: {foodCostPct.toFixed(1)}%</p>
+            <p className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-slate-900" /> Actual Food Cost: {avgFc.toFixed(1)}%</p>
+            <p className="pt-1 italic text-muted-foreground">
+              Variance: {avgFc - foodCostPct >= 0 ? "+" : ""}{(avgFc - foodCostPct).toFixed(1)}% (Check Waste Logs)
+            </p>
+          </div>
+        </Card>
       </div>
+
+      {/* Recipe Margin Watch (full width) */}
+      <Card className="p-5">
+        <div className="mb-4 flex items-end justify-between">
+          <div>
+            <p className="text-sm font-semibold">Recipe Margin Watch</p>
+            <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Top Loss Leaders</p>
+          </div>
+          <Button variant="outline" size="sm" className={t.accentText}>Recalculate Margins</Button>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {lossLeaders.map((r) => (
+            <div key={r.name} className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2.5">
+              <div>
+                <p className="font-medium">{r.name}</p>
+                <p className="text-[11px] text-muted-foreground">Margin: {r.margin}%</p>
+              </div>
+              <span className={cn("font-mono font-bold", t.accentText)}>{formatINR(r.menu).replace(".00", "")}</span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-4 text-xs text-muted-foreground">
+          Commodity prices for <strong>Black Truffle</strong> and <strong>Wagyu</strong> have risen 12% in the last 7 days.
+        </p>
+      </Card>
     </>
   );
 }
@@ -231,9 +245,8 @@ function Kpi({
       </div>
       <div className="mt-2 flex items-baseline gap-2">
         <span className="text-2xl font-bold">{value}</span>
-        <span className={cn("inline-flex items-center gap-0.5 text-xs font-semibold", delta.good ? "text-emerald-600" : "text-red-600")}>
-          {delta.good ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
-          {delta.good ? "-" : "+"}{delta.text}
+        <span className={cn("rounded px-1.5 py-0.5 text-xs font-semibold", delta.good ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>
+          {delta.text}
         </span>
       </div>
       {children}
