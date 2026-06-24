@@ -10,7 +10,7 @@ create table users (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
   email       text not null unique,
-  role        text not null check (role in ('admin','editor','viewer')),
+  role        text not null check (role in ('admin','editor','head_chef','chef','viewer')),
   status      text not null default 'active' check (status in ('active','inactive')),
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()

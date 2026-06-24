@@ -21,13 +21,13 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "editor", "viewer"] },
-  { to: "/materials", label: "Raw Materials", icon: Beef, roles: ["admin", "editor"] },
-  { to: "/recipes", label: "Recipes", icon: BookOpen, roles: ["admin", "editor", "viewer"] },
-  { to: "/prep", label: "In-House Prep", icon: ChefHat, roles: ["admin", "editor"] },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "editor", "head_chef", "chef", "viewer"] },
+  { to: "/materials", label: "Raw Materials", icon: Beef, roles: ["admin", "editor", "head_chef", "chef"] },
+  { to: "/recipes", label: "Recipes", icon: BookOpen, roles: ["admin", "editor", "head_chef", "chef", "viewer"] },
+  { to: "/prep", label: "In-House Prep", icon: ChefHat, roles: ["admin", "editor", "head_chef", "chef"] },
   { to: "/approvals", label: "Approvals", icon: CheckCircle2, roles: ["admin"] },
-  { to: "/reports", label: "Reports", icon: FileBarChart, roles: ["admin", "editor"] },
-  { to: "/viewer-access", label: "Viewer Access", icon: Eye, roles: ["admin", "editor"] },
+  { to: "/reports", label: "Reports", icon: FileBarChart, roles: ["admin", "editor", "head_chef"] },
+  { to: "/viewer-access", label: "Viewer Access", icon: Eye, roles: ["admin", "editor", "head_chef"] },
   { to: "/users", label: "Users", icon: Users, roles: ["admin"] },
   { to: "/audit", label: "Price Changes", icon: ScrollText, roles: ["admin"] },
   { to: "/settings", label: "Settings", icon: Settings, roles: ["admin"] },

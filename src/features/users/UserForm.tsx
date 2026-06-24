@@ -127,6 +127,8 @@ export function UserForm({
                 <SelectContent>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="editor">Recipe Editor</SelectItem>
+                  <SelectItem value="head_chef">Head Chef</SelectItem>
+                  <SelectItem value="chef">Chef</SelectItem>
                   <SelectItem value="viewer">Viewer</SelectItem>
                 </SelectContent>
               </Select>

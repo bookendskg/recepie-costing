@@ -14,6 +14,7 @@ import { useTheme } from "@/lib/theme";
 import { navForRole } from "./nav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ROLE_LABELS } from "@/lib/data/types";
 import { useDashboardBrand, brandBgClass, brandFgClass, brandWordmark } from "@/features/dashboard/brandTheme";
 import { BrandFilter } from "@/features/dashboard/BrandFilter";
 
@@ -63,8 +64,8 @@ export function AppLayout() {
       <div className="border-t border-current/10 p-3">
         <div className="mb-2 px-1">
           <p className="truncate text-sm font-medium">{user.name}</p>
-          <Badge variant="outline" className="mt-1 border-current/30 capitalize">
-            {user.role}
+          <Badge variant="outline" className="mt-1 border-current/30">
+            {ROLE_LABELS[user.role]}
           </Badge>
         </div>
         <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
@@ -124,7 +125,7 @@ export function AppLayout() {
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
           <div className="flex-1" />
-          {(user.role === "admin" || user.role === "editor") && (
+          {user.role !== "viewer" && (
             <div className="mr-2 hidden sm:block">
               <BrandFilter value={brand} onChange={setBrand} />
             </div>

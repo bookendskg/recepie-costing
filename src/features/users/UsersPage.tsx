@@ -28,7 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/components/ui/use-toast";
-import type { User } from "@/lib/data/types";
+import { ROLE_LABELS, type User } from "@/lib/data/types";
 import { useUpdateUser, useUsers } from "./hooks";
 import { UserForm } from "./UserForm";
 import { AssignAccessDialog } from "@/features/viewers/AssignAccessDialog";
@@ -131,7 +131,7 @@ export function UsersPage() {
                 <TableRow key={u.id}>
                   <TableCell className="font-medium">{u.name}</TableCell>
                   <TableCell className="text-muted-foreground">{u.email}</TableCell>
-                  <TableCell className="capitalize">{u.role}</TableCell>
+                  <TableCell>{ROLE_LABELS[u.role]}</TableCell>
                   <TableCell>
                     <Badge variant={u.status === "active" ? "success" : "secondary"}>
                       {u.status}

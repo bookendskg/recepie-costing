@@ -58,6 +58,16 @@ const MATRIX: Record<Role, Capability[]> = {
     "viewer.assign",
     "report.excel",
   ],
+  // Head Chef: views everything (recipes, sub-recipes, costs) but can't change
+  // prices/recipes; can grant sharing permissions to others.
+  head_chef: [
+    "material.view",
+    "recipe.viewAll",
+    "viewer.assign",
+    "report.excel",
+  ],
+  // Chef: view-only.
+  chef: ["material.view", "recipe.viewAll"],
   viewer: [],
 };
 
@@ -116,7 +126,8 @@ export function visibilityFor(
   role: Role,
   viewType: ViewType | null,
 ): ViewVisibility {
-  if (role === "admin" || role === "editor") return AIKO;
+  // All staff roles (admin, editor, head chef, chef) see full costing.
+  if (role !== "viewer") return AIKO;
   if (viewType === "capiche") return CAPICHE;
   if (viewType === "aiko") return AIKO;
   return CAPICHE; // safest default for an unassigned viewer
@@ -150,5 +161,7 @@ export function visibilityForUser(user: User): ViewVisibility {
 export const HOME_BY_ROLE: Record<Role, string> = {
   admin: "/dashboard",
   editor: "/dashboard",
+  head_chef: "/dashboard",
+  chef: "/dashboard",
   viewer: "/dashboard",
 };
