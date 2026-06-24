@@ -322,7 +322,16 @@ export function buildSeed(): MockDb {
         value: JSON.stringify([
           "Vegetables", "Protein", "Dairy", "Grains & Flour", "Oils & Fats",
           "Spices", "Sauces & Condiments", "Beverages", "Bakery", "Dry Fruits",
-          "In-House Prep", "Pasta", "Pizza", "Sushi", "Mains",
+          "In-House Prep",
+        ]),
+        updated_by: U_ADMIN, updated_at: SEED_TS,
+      },
+      {
+        id: "s-recipe-categories",
+        key: "recipe_categories",
+        value: JSON.stringify([
+          "Pasta", "Pizza", "Sushi", "Mains", "Appetizers", "Small Plates",
+          "Sides", "Salad", "Dessert", "Beverage", "In-House Prep",
         ]),
         updated_by: U_ADMIN, updated_at: SEED_TS,
       },

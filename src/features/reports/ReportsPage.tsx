@@ -27,7 +27,7 @@ import { BRANDS } from "@/lib/data/types";
 import { useRecipes } from "@/features/recipes/hooks";
 import { useMaterials } from "@/features/raw-materials/hooks";
 import { useUsers } from "@/features/users/hooks";
-import { useCategories, useFoodCostPct } from "@/features/settings/hooks";
+import { useRecipeCategories, useFoodCostPct } from "@/features/settings/hooks";
 import { RecipePdfButton } from "./RecipePdfButton";
 import {
   useAllCostHistory,
@@ -40,7 +40,7 @@ export function ReportsPage() {
   const { data: recipes = [] } = useRecipes();
   const { data: materials = [] } = useMaterials();
   const { data: users = [] } = useUsers();
-  const { data: categories = [] } = useCategories();
+  const { data: categories = [] } = useRecipeCategories();
   const { data: foodCostPct = 30 } = useFoodCostPct();
   const ingredients = useAllRecipeIngredients();
   const costHistory = useAllCostHistory();

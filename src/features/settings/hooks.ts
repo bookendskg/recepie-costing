@@ -22,6 +22,26 @@ export function useCategories() {
   });
 }
 
+const DEFAULT_RECIPE_CATEGORIES = [
+  "Pasta", "Pizza", "Sushi", "Mains", "Appetizers", "Small Plates",
+  "Sides", "Salad", "Dessert", "Beverage", "In-House Prep",
+];
+
+export function useRecipeCategories() {
+  return useQuery({
+    queryKey: ["settings", "recipe_categories"],
+    queryFn: async () => {
+      const raw = await settingsRepo.get("recipe_categories");
+      if (!raw) return DEFAULT_RECIPE_CATEGORIES;
+      try {
+        return JSON.parse(raw) as string[];
+      } catch {
+        return DEFAULT_RECIPE_CATEGORIES;
+      }
+    },
+  });
+}
+
 export function useFoodCostPct() {
   return useQuery({
     queryKey: ["settings", "food_cost_pct"],

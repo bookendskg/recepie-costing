@@ -31,7 +31,7 @@ import { formatINR } from "@/lib/utils";
 import { toast } from "@/components/ui/use-toast";
 import { BRANDS, type RawMaterial } from "@/lib/data/types";
 import { useMaterials } from "@/features/raw-materials/hooks";
-import { useFoodCostPct, useCategories } from "@/features/settings/hooks";
+import { useFoodCostPct, useRecipeCategories } from "@/features/settings/hooks";
 import { useRecipeCosting, type EditorLine } from "@/features/costing/useRecipeCosting";
 import { CostSummary } from "@/features/costing/CostSummary";
 import { IngredientPicker, type ComponentPick } from "./IngredientPicker";
@@ -54,7 +54,7 @@ export function RecipeEditorPage() {
 
   const { data: materials = [] } = useMaterials();
   const { data: allRecipes = [] } = useRecipes();
-  const { data: categories = [] } = useCategories();
+  const { data: categories = [] } = useRecipeCategories();
   const { data: foodCostPct = 30 } = useFoodCostPct();
   const { data: existing, isLoading: loadingRecipe } = useRecipe(id);
 

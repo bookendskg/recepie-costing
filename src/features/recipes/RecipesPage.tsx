@@ -39,7 +39,7 @@ import { calculateIngredientCost } from "@/lib/costing";
 import { canConvert } from "@/lib/units";
 import type { Recipe } from "@/lib/data/types";
 import { toast } from "@/components/ui/use-toast";
-import { useCategories, useFoodCostPct, useAllSettings } from "@/features/settings/hooks";
+import { useRecipeCategories, useFoodCostPct, useAllSettings } from "@/features/settings/hooks";
 import { useMaterials } from "@/features/raw-materials/hooks";
 import { useUsersMap } from "@/features/users/hooks";
 import { useDashboardBrand } from "@/features/dashboard/brandTheme";
@@ -78,7 +78,7 @@ export function RecipesPage({ prepMode = false }: { prepMode?: boolean } = {}) {
     }
     return globalBrand === "all" ? base : base.filter((r) => r.brand === globalBrand);
   }, [allRecipes, prepMode, user, globalBrand]);
-  const { data: categories = [] } = useCategories();
+  const { data: categories = [] } = useRecipeCategories();
   const { data: foodCostPct = 30 } = useFoodCostPct();
   const { data: settings = [] } = useAllSettings();
   const { data: materials = [] } = useMaterials();
