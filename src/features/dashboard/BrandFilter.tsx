@@ -8,7 +8,14 @@ const OPTIONS: { value: BrandSelection; label: string }[] = [
   ...BRANDS,
 ];
 
-/** Segmented All / Capiche / Aiko toggle used on the dashboards. */
+// Active chip is painted in that brand's own colour.
+const ACTIVE: Record<BrandSelection, string> = {
+  all: "bg-[#1b35a8] text-white shadow",
+  capiche: "bg-[#ed1c24] text-white shadow",
+  aiko: "bg-[#e8b923] text-slate-900 shadow",
+};
+
+/** Segmented All / Capiche / Aiko brand switcher. */
 export function BrandFilter({
   value,
   onChange,
@@ -24,9 +31,7 @@ export function BrandFilter({
           onClick={() => onChange(o.value)}
           className={cn(
             "rounded-md px-3 py-1 text-sm font-medium transition-colors",
-            value === o.value
-              ? "bg-background text-foreground shadow"
-              : "text-muted-foreground hover:text-foreground",
+            value === o.value ? ACTIVE[o.value] : "text-muted-foreground hover:text-foreground",
           )}
         >
           {o.label}

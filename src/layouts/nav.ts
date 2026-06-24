@@ -7,7 +7,6 @@ import {
   Users,
   Settings,
   ScrollText,
-  ClipboardList,
   ChefHat,
   type LucideIcon,
 } from "lucide-react";
@@ -23,7 +22,6 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "editor", "viewer"] },
   { to: "/materials", label: "Raw Materials", icon: Beef, roles: ["admin", "editor"] },
-  { to: "/inventory", label: "Inventory", icon: ClipboardList, roles: ["admin", "editor"] },
   { to: "/recipes", label: "Recipes", icon: BookOpen, roles: ["admin", "editor", "viewer"] },
   { to: "/prep", label: "In-House Prep", icon: ChefHat, roles: ["admin", "editor"] },
   { to: "/approvals", label: "Approvals", icon: CheckCircle2, roles: ["admin"] },

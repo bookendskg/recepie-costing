@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, FileEdit, FlaskConical, CheckCircle2, Plus, Beef } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -18,14 +18,14 @@ import {
 import { formatINR } from "@/lib/utils";
 import { useSession } from "@/lib/auth/session";
 import { useRecipes } from "@/features/recipes/hooks";
-import { BrandFilter, type BrandSelection } from "./BrandFilter";
+import { useDashboardBrand } from "./brandTheme";
 
 export function EditorDashboard() {
   const user = useSession((s) => s.user)!;
   const navigate = useNavigate();
   const { data: recipes = [] } = useRecipes();
 
-  const [brand, setBrand] = useState<BrandSelection>("all");
+  const brand = useDashboardBrand((s) => s.brand);
   const mine = useMemo(
     () =>
       recipes.filter(
@@ -46,12 +46,9 @@ export function EditorDashboard() {
         title="My Dashboard"
         description="Your recipes at a glance"
         actions={
-          <div className="flex items-center gap-2">
-            <BrandFilter value={brand} onChange={setBrand} />
-            <Button variant="accent" onClick={() => navigate("/recipes/new")}>
-              <Plus className="h-4 w-4" /> Create Recipe
-            </Button>
-          </div>
+          <Button variant="accent" onClick={() => navigate("/recipes/new")}>
+            <Plus className="h-4 w-4" /> Create Recipe
+          </Button>
         }
       />
 

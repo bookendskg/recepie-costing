@@ -25,7 +25,6 @@ import { useMaterials, useRecentPriceHistory } from "@/features/raw-materials/ho
 import { useAuditLogs } from "@/features/audit/hooks";
 import { useFoodCostPct, useAllSettings } from "@/features/settings/hooks";
 import { foodCostPctOf } from "@/features/recipes/recipeMetrics";
-import { BrandFilter } from "./BrandFilter";
 import { useDashboardBrand, brandWordmark, brandIsLight } from "./brandTheme";
 
 export function AdminDashboard() {
@@ -41,7 +40,6 @@ export function AdminDashboard() {
   const materialsById = useMemo(() => new Map(materials.map((m) => [m.id, m])), [materials]);
 
   const brand = useDashboardBrand((s) => s.brand);
-  const setBrand = useDashboardBrand((s) => s.setBrand);
   const recipes = useMemo(
     () => (brand === "all" ? allRecipes : allRecipes.filter((r) => r.brand === brand)),
     [allRecipes, brand],
@@ -96,15 +94,12 @@ export function AdminDashboard() {
 
   return (
     <>
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className={brandIsLight(brand) ? "text-slate-900" : "text-white"}>
-          <p className="text-xs font-extrabold uppercase tracking-[0.3em] opacity-80">
-            {brandWordmark[brand]}
-          </p>
-          <h1 className="text-2xl font-semibold tracking-tight">Kitchen Operations</h1>
-          <p className="text-sm opacity-70">Live costing health across your catalog</p>
-        </div>
-        <BrandFilter value={brand} onChange={setBrand} />
+      <div className={cn("mb-6", brandIsLight(brand) ? "text-slate-900" : "text-white")}>
+        <p className="text-xs font-extrabold uppercase tracking-[0.3em] opacity-80">
+          {brandWordmark[brand]}
+        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">Kitchen Operations</h1>
+        <p className="text-sm opacity-70">Live costing health across your catalog</p>
       </div>
 
       {/* KPI cards */}

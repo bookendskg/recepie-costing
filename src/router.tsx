@@ -4,7 +4,6 @@ import { RequireAuth, RequireRole } from "@/features/auth/guards";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { MaterialsPage } from "@/features/raw-materials/MaterialsPage";
-import { InventoryPage } from "@/features/inventory/InventoryPage";
 import { RecipesPage } from "@/features/recipes/RecipesPage";
 import { RecipeEditorPage } from "@/features/recipes/RecipeEditorPage";
 import { RecipeDetailPage } from "@/features/recipes/RecipeDetailPage";
@@ -31,14 +30,6 @@ export const router = createBrowserRouter([
         element: (
           <RequireRole roles={["admin", "editor"]}>
             <MaterialsPage />
-          </RequireRole>
-        ),
-      },
-      {
-        path: "inventory",
-        element: (
-          <RequireRole roles={["admin", "editor"]}>
-            <InventoryPage />
           </RequireRole>
         ),
       },

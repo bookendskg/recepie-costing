@@ -14,7 +14,8 @@ import { useTheme } from "@/lib/theme";
 import { navForRole } from "./nav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useDashboardBrand, brandBgClass } from "@/features/dashboard/brandTheme";
+import { useDashboardBrand, brandBgClass, brandTintClass } from "@/features/dashboard/brandTheme";
+import { BrandFilter } from "@/features/dashboard/BrandFilter";
 
 export function AppLayout() {
   const user = useSession((s) => s.user);
@@ -23,6 +24,7 @@ export function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const brand = useDashboardBrand((s) => s.brand);
+  const setBrand = useDashboardBrand((s) => s.setBrand);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   if (!user) return null;
@@ -100,6 +102,11 @@ export function AppLayout() {
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
           <div className="flex-1" />
+          {(user.role === "admin" || user.role === "editor") && (
+            <div className="mr-2 hidden sm:block">
+              <BrandFilter value={brand} onChange={setBrand} />
+            </div>
+          )}
           <Button variant="ghost" size="icon" onClick={toggle} title="Toggle theme">
             {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>
@@ -107,8 +114,10 @@ export function AppLayout() {
         <main
           className={cn(
             "flex-1 overflow-y-auto p-4 transition-colors sm:p-6",
-            // Paint the whole admin dashboard background in the brand colour.
-            location.pathname === "/dashboard" && user.role === "admin" && brandBgClass(brand),
+            // Bold brand colour on the admin dashboard; a soft brand tint elsewhere.
+            location.pathname === "/dashboard" && user.role === "admin"
+              ? brandBgClass(brand)
+              : brandTintClass(brand),
           )}
         >
           <div className="mx-auto max-w-7xl">
