@@ -48,6 +48,8 @@ export interface Recipe {
   category: string;
   brand: Brand;
   description: string | null;
+  /** Recipe photo as a data URL (mock) or external URL. */
+  image_url: string | null;
   preparation_time: number | null;
   serving_size: number;
   status: RecipeStatus;

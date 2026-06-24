@@ -397,8 +397,12 @@ function RecipeRow({
         )}
       >
         <div className="col-span-2 flex items-center gap-3 lg:col-span-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-lg">
-            {emojiFor(recipe.category)}
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted text-lg">
+            {recipe.image_url ? (
+              <img src={recipe.image_url} alt="" className="h-full w-full object-cover" />
+            ) : (
+              emojiFor(recipe.category)
+            )}
           </div>
           <div className="min-w-0">
             <p className="truncate font-semibold">{recipe.recipe_name}</p>

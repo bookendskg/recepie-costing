@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Copy,
@@ -11,11 +11,13 @@ import {
   UtensilsCrossed,
   TrendingUp,
   AlertTriangle,
+  ImageUp,
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -37,7 +39,9 @@ import {
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { cn, formatDate, formatINR } from "@/lib/utils";
 import { calculateIngredientCost, round2 } from "@/lib/costing";
-import { canConvert } from "@/lib/units";
+import { canConvert, getConversionFactor } from "@/lib/units";
+
+const round3 = (n: number) => Math.round(n * 1000) / 1000;
 import { BRANDS } from "@/lib/data/types";
 import { useSession } from "@/lib/auth/session";
 import { can, canEditRecipe, visibilityFor } from "@/lib/auth/permissions";
@@ -54,6 +58,8 @@ import {
   useRecipeCostHistory,
   useRecipeVersions,
   useRejectRecipe,
+  useSetRecipeImage,
+  useSetSellingPrice,
   useSubmitRecipe,
 } from "./hooks";
 
@@ -78,6 +84,30 @@ export function RecipeDetailPage() {
   const submitMut = useSubmitRecipe();
   const approveMut = useApproveRecipe();
   const rejectMut = useRejectRecipe();
+  const sellingMut = useSetSellingPrice();
+  const imageMut = useSetRecipeImage();
+
+  const onImagePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2_000_000) {
+      toast.error("Image too large", "Please choose an image under 2 MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async () => {
+      await imageMut.mutateAsync({ id: recipe.id, imageUrl: String(reader.result) });
+      toast.success("Recipe image updated");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const [sellingInput, setSellingInput] = useState("");
+  useEffect(() => {
+    if (data?.recipe) {
+      setSellingInput(data.recipe.selling_price != null ? String(data.recipe.selling_price) : "");
+    }
+  }, [data?.recipe?.id, data?.recipe?.selling_price]);
 
   const scale = 1;
   const [submitOpen, setSubmitOpen] = useState(false);
@@ -114,11 +144,6 @@ export function RecipeDetailPage() {
   const marginPct = menuPrice > 0 ? round2(((menuPrice - portionCost) / menuPrice) * 100) : 0;
   const brandLabel = BRANDS.find((b) => b.value === recipe.brand)?.label ?? recipe.brand;
 
-  // Price recommendation engine — suggested price at each food-cost target.
-  const recommendations = [25, 30, 35].map((pct) => ({
-    pct,
-    price: portionCost > 0 ? round2(portionCost / (pct / 100)) : 0,
-  }));
   const actualFc = menuPrice > 0 ? round2((portionCost / menuPrice) * 100) : foodCostPct;
   const efficiency = Math.max(0, Math.min(100, Math.round((foodCostPct / Math.max(actualFc, 1)) * 100)));
 
@@ -190,11 +215,22 @@ export function RecipeDetailPage() {
           {/* Hero card */}
           <Card className="overflow-hidden">
             <div className="grid sm:grid-cols-2">
-              <div className="relative flex h-44 items-center justify-center bg-gradient-to-br from-emerald-700 to-teal-900 text-6xl">
-                {emojiFor(recipe.category)}
+              <div className="relative flex h-44 items-center justify-center overflow-hidden bg-gradient-to-br from-emerald-700 to-teal-900 text-6xl">
+                {recipe.image_url ? (
+                  <img src={recipe.image_url} alt={recipe.recipe_name} className="absolute inset-0 h-full w-full object-cover" />
+                ) : (
+                  emojiFor(recipe.category)
+                )}
                 <span className="absolute left-3 top-3 rounded bg-black/40 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
                   {recipe.status === "approved" ? "Active Recipe" : recipe.status}
                 </span>
+                {editable && (
+                  <label className="absolute bottom-3 right-3 inline-flex cursor-pointer items-center gap-1 rounded bg-black/50 px-2 py-1 text-[11px] font-medium text-white hover:bg-black/70">
+                    <ImageUp className="h-3.5 w-3.5" />
+                    {recipe.image_url ? "Change" : "Add Image"}
+                    <input type="file" accept="image/*" className="hidden" onChange={onImagePick} />
+                  </label>
+                )}
               </div>
               <div className="flex flex-col justify-between p-5">
                 <div className="grid grid-cols-3 gap-2 text-center">
@@ -229,38 +265,33 @@ export function RecipeDetailPage() {
                       <TableHead>Ingredient Name</TableHead>
                       {vis.quantities && <TableHead className="text-right">Qty</TableHead>}
                       {vis.quantities && <TableHead>Unit</TableHead>}
-                      {vis.unitCosts && <TableHead className="text-right">Price / Unit</TableHead>}
-                      {vis.totalCost && <TableHead className="text-right">Subtotal</TableHead>}
+                      {vis.totalCost && <TableHead className="text-right">Cost</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {ingredients.map((ing) => {
                       const m = ing.material;
                       const ok = m && m.cost_per_base_unit !== null && canConvert(ing.unit_used, m.base_unit);
-                      // Reference price per purchase unit (e.g. ₹500 / KG); subtotal is the
-                      // cost of the quantity actually used in the recipe (e.g. 50 g).
-                      const pricePerPurchaseUnit =
-                        m && m.purchase_price !== null && m.purchase_quantity
-                          ? m.purchase_price / m.purchase_quantity
-                          : null;
-                      const subtotal = ok ? round2(calculateIngredientCost(m!.cost_per_base_unit!, ing.quantity_used, ing.unit_used, m!.base_unit) * scale) : null;
+                      // Display the quantity in the ingredient's purchase unit (KG/Litre):
+                      // e.g. 600 Gram → 0.6 KG. Cost is for the quantity actually used.
+                      const displayUnit = m?.purchase_unit ?? ing.unit_used;
+                      const qtyInPurchase =
+                        m && canConvert(ing.unit_used, m.purchase_unit)
+                          ? round3(ing.quantity_used * scale * getConversionFactor(ing.unit_used, m.purchase_unit))
+                          : round3(ing.quantity_used * scale);
+                      const cost = ok ? round2(calculateIngredientCost(m!.cost_per_base_unit!, ing.quantity_used, ing.unit_used, m!.base_unit) * scale) : null;
                       return (
                         <TableRow key={ing.id}>
                           <TableCell className="font-medium">{m?.ingredient_name ?? "—"}</TableCell>
-                          {vis.quantities && <TableCell className="text-right font-mono">{round2(ing.quantity_used * scale)}</TableCell>}
-                          {vis.quantities && <TableCell className="text-muted-foreground">{ing.unit_used}</TableCell>}
-                          {vis.unitCosts && (
-                            <TableCell className="text-right font-mono text-muted-foreground">
-                              {pricePerPurchaseUnit === null ? "—" : `${formatINR(pricePerPurchaseUnit)} / ${m!.purchase_unit}`}
-                            </TableCell>
-                          )}
-                          {vis.totalCost && <TableCell className="text-right font-mono font-semibold">{formatINR(subtotal)}</TableCell>}
+                          {vis.quantities && <TableCell className="text-right font-mono">{qtyInPurchase}</TableCell>}
+                          {vis.quantities && <TableCell className="text-muted-foreground">{displayUnit}</TableCell>}
+                          {vis.totalCost && <TableCell className="text-right font-mono font-semibold">{formatINR(cost)}</TableCell>}
                         </TableRow>
                       );
                     })}
                     {vis.totalCost && (
                       <TableRow className="border-t-2">
-                        <TableCell colSpan={vis.unitCosts ? 4 : vis.quantities ? 3 : 1} className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        <TableCell colSpan={vis.quantities ? 3 : 1} className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           Total Raw Ingredient Cost
                         </TableCell>
                         <TableCell className="text-right font-mono text-base font-bold text-emerald-700">
@@ -354,23 +385,43 @@ export function RecipeDetailPage() {
                   </div>
                 </div>
 
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  Price Recommendation Engine
-                </p>
-                <div className="space-y-2">
-                  {recommendations.map((r) => (
-                    <div
-                      key={r.pct}
-                      className={cn(
-                        "flex items-center justify-between rounded-md border px-3 py-2 text-sm",
-                        r.pct === foodCostPct && "border-emerald-400 bg-emerald-50",
-                      )}
-                    >
-                      <span>Target {r.pct}% Food Cost</span>
-                      <span className="font-mono font-semibold">{formatINR(r.price)}</span>
+                {editable && (
+                  <div className="mb-2">
+                    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Selling Price
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">₹</span>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          className="pl-6"
+                          value={sellingInput}
+                          onChange={(e) => setSellingInput(e.target.value)}
+                          placeholder="Suggested"
+                        />
+                      </div>
+                      <Button
+                        size="sm"
+                        className="bg-emerald-800 text-white hover:bg-emerald-900"
+                        disabled={sellingMut.isPending}
+                        onClick={async () => {
+                          const v = sellingInput.trim() === "" ? null : Number(sellingInput);
+                          if (v !== null && !(v > 0)) {
+                            toast.error("Menu price must be greater than 0");
+                            return;
+                          }
+                          await sellingMut.mutateAsync({ id: recipe.id, price: v });
+                          toast.success("Selling price updated");
+                        }}
+                      >
+                        Save
+                      </Button>
                     </div>
-                  ))}
-                </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground">Leave blank to use the suggested price.</p>
+                  </div>
+                )}
 
                 <div className="mt-4 border-t pt-3">
                   <div className="mb-1 flex items-center justify-between text-xs">

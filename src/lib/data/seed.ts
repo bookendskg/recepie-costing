@@ -216,6 +216,7 @@ for (const rs of recipeSeeds) {
     category: rs.category,
     brand: rs.brand,
     description: rs.description,
+    image_url: null,
     preparation_time: rs.prep,
     serving_size: rs.serving,
     status: rs.status,

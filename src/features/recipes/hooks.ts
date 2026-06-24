@@ -75,6 +75,26 @@ export function useDuplicateRecipe() {
   });
 }
 
+export function useSetRecipeImage() {
+  const qc = useQueryClient();
+  const actorId = useActorId();
+  return useMutation({
+    mutationFn: ({ id, imageUrl }: { id: string; imageUrl: string | null }) =>
+      recipesRepo.setImage(id, imageUrl, actorId),
+    onSuccess: () => invalidate(qc),
+  });
+}
+
+export function useSetSellingPrice() {
+  const qc = useQueryClient();
+  const actorId = useActorId();
+  return useMutation({
+    mutationFn: ({ id, price }: { id: string; price: number | null }) =>
+      recipesRepo.setSellingPrice(id, price, actorId),
+    onSuccess: () => invalidate(qc),
+  });
+}
+
 export function useSubmitRecipe() {
   const qc = useQueryClient();
   const actorId = useActorId();

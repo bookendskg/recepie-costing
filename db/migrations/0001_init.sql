@@ -40,6 +40,7 @@ create table recipes (
   category         text not null,
   brand            text not null check (brand in ('capiche','aiko')),
   description      text,
+  image_url        text,
   preparation_time integer check (preparation_time > 0),
   serving_size     integer not null check (serving_size > 0),
   status           text not null default 'draft' check (status in ('draft','testing','approved','rejected')),

@@ -110,6 +110,7 @@ export const recipesRepo = {
           category: header.category,
           brand: header.brand,
           description: header.description ?? null,
+          image_url: null,
           preparation_time: header.preparation_time ?? null,
           serving_size: header.serving_size,
           status: "draft",
@@ -326,6 +327,39 @@ export const recipesRepo = {
   async allIngredients(): Promise<RecipeIngredientWithMaterial[]> {
     const db = getDb();
     return delay(attachMaterials(db, db.recipe_ingredients));
+  },
+
+  async setImage(id: string, imageUrl: string | null, actorId: string): Promise<Recipe> {
+    return delay(
+      mutate((db) => {
+        const recipe = db.recipes.find((r) => r.id === id);
+        if (!recipe) throw new Error("Recipe not found");
+        recipe.image_url = imageUrl;
+        recipe.updated_at = nowISO();
+        recipe.updated_by = actorId;
+        return recipe;
+      }),
+    );
+  },
+
+  async setSellingPrice(id: string, price: number | null, actorId: string): Promise<Recipe> {
+    return delay(
+      mutate((db) => {
+        const recipe = db.recipes.find((r) => r.id === id);
+        if (!recipe) throw new Error("Recipe not found");
+        recipe.selling_price = price;
+        recipe.updated_at = nowISO();
+        recipe.updated_by = actorId;
+        recordAudit(db, {
+          entity_type: "recipe",
+          entity_id: id,
+          action: "update",
+          performed_by: actorId,
+          notes: `Set menu price for "${recipe.recipe_name}" to ${price ?? "—"}`,
+        });
+        return recipe;
+      }),
+    );
   },
 
   async costHistory(id: string): Promise<RecipeCostHistory[]> {
