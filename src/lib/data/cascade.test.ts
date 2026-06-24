@@ -10,20 +10,28 @@ describe("price cascade", () => {
     resetDb();
   });
 
-  it("seed Chicken Alfredo totals ₹199.50", async () => {
-    const r = await recipesRepo.getById("r-alfredo");
-    expect(r?.total_cost).toBe(199.5);
+  it("seed Aglio Olio has a positive single-portion cost", async () => {
+    const r = await recipesRepo.getById("r-aglio-olio");
+    expect(r).toBeTruthy();
+    expect(r!.total_cost!).toBeGreaterThan(0);
+    // serving size is 1, so cost per portion equals the total cost.
+    expect(r!.cost_per_portion).toBe(r!.total_cost);
   });
 
-  it("raising Chicken price 250→300/KG cascades to the recipe", async () => {
-    const chicken = await materialsRepo.getById("m-chicken");
+  it("raising Olive Oil price cascades to recipes that use it", async () => {
+    const before = (await recipesRepo.getById("r-aglio-olio"))!.total_cost!;
+    const oil = await materialsRepo.getById("m-olive-oil");
+    const origPrice = oil!.purchase_price!;
+    const newPrice = origPrice + 1000;
+
+    // +₹1000/KG = +₹1/g; Aglio Olio uses 15 g → +₹15.00.
     await materialsRepo.update(
-      "m-chicken",
+      "m-olive-oil",
       {
-        ingredient_name: chicken!.ingredient_name,
-        category: chicken!.category,
-        supplier_name: chicken!.supplier_name,
-        purchase_price: 300,
+        ingredient_name: oil!.ingredient_name,
+        category: oil!.category,
+        supplier_name: oil!.supplier_name,
+        purchase_price: newPrice,
         purchase_quantity: 1,
         purchase_unit: "KG",
         base_unit: "Gram",
@@ -31,17 +39,16 @@ describe("price cascade", () => {
       "u-admin",
     );
 
-    // 500g at the new ₹0.30/g = ₹150 (was ₹125), so total 199.50 → 224.50.
-    const r = await recipesRepo.getById("r-alfredo");
-    expect(r?.total_cost).toBe(224.5);
+    const after = (await recipesRepo.getById("r-aglio-olio"))!.total_cost!;
+    expect(after - before).toBeCloseTo(15, 1);
 
-    const history = await recipesRepo.costHistory("r-alfredo");
+    const history = await recipesRepo.costHistory("r-aglio-olio");
     expect(history.length).toBe(1);
-    expect(history[0].old_total_cost).toBe(199.5);
-    expect(history[0].new_total_cost).toBe(224.5);
+    expect(history[0].old_total_cost).toBe(before);
+    expect(history[0].new_total_cost).toBe(after);
 
-    const priceLog = await materialsRepo.priceHistory("m-chicken");
-    expect(priceLog[0].old_price).toBe(250);
-    expect(priceLog[0].new_price).toBe(300);
+    const priceLog = await materialsRepo.priceHistory("m-olive-oil");
+    expect(priceLog[0].old_price).toBe(origPrice);
+    expect(priceLog[0].new_price).toBe(newPrice);
   });
 });
