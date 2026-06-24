@@ -134,7 +134,6 @@ export function MaterialsPage() {
                 <TableHead>Category</TableHead>
                 <TableHead>Purchase Price</TableHead>
                 <TableHead>Unit</TableHead>
-                <TableHead>Cost / Unit</TableHead>
                 <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
@@ -160,11 +159,6 @@ export function MaterialsPage() {
                     )}
                   </TableCell>
                   <TableCell>{m.purchase_unit}</TableCell>
-                  <TableCell className="font-medium">
-                    {m.purchase_price === null
-                      ? "—"
-                      : `${formatINR(m.purchase_price / m.purchase_quantity)} / ${m.purchase_unit}`}
-                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
