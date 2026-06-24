@@ -57,6 +57,11 @@ export interface Recipe {
   cost_per_portion: number | null;
   /** Actual menu price set by the chef. Null → use the suggested price. */
   selling_price: number | null;
+  /** True for in-house prep recipes (sauces, doughs, pastes) used as components. */
+  is_prep: boolean;
+  /** Batch output used to derive a prep's per-unit cost (defaults to sum of grams). */
+  yield_quantity: number;
+  yield_unit: string;
   created_by: string | null;
   approved_by: string | null;
   approved_at: string | null;
@@ -67,10 +72,15 @@ export interface Recipe {
   updated_by: string | null;
 }
 
+/** A recipe line is either a raw material or another (prep) recipe. */
+export type ComponentType = "material" | "recipe";
+
 export interface RecipeIngredient {
   id: string;
   recipe_id: string;
+  /** Points at a raw_material (component_type 'material') or a recipe ('recipe'). */
   ingredient_id: string;
+  component_type: ComponentType;
   quantity_used: number;
   unit_used: string;
   calculated_cost: number | null;
@@ -142,7 +152,9 @@ export interface SystemSetting {
   updated_at: string;
 }
 
-/** A recipe ingredient joined with its raw material, used by the costing UI. */
+/** A recipe ingredient joined with its raw material or sub-recipe, for the UI. */
 export interface RecipeIngredientWithMaterial extends RecipeIngredient {
   material: RawMaterial | null;
+  /** Set when component_type === 'recipe' — the referenced prep recipe. */
+  subRecipe: Recipe | null;
 }

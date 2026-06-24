@@ -63,10 +63,14 @@ const CATEGORY_EMOJI: Record<string, string> = {
 };
 const emojiFor = (category: string) => CATEGORY_EMOJI[category] ?? "🍽️";
 
-export function RecipesPage() {
+export function RecipesPage({ prepMode = false }: { prepMode?: boolean } = {}) {
   const user = useSession((s) => s.user)!;
   const navigate = useNavigate();
-  const { data: recipes = [], isLoading } = useRecipes();
+  const { data: allRecipes = [], isLoading } = useRecipes();
+  const recipes = useMemo(
+    () => allRecipes.filter((r) => (prepMode ? r.is_prep : !r.is_prep)),
+    [allRecipes, prepMode],
+  );
   const { data: categories = [] } = useCategories();
   const { data: foodCostPct = 30 } = useFoodCostPct();
   const { data: settings = [] } = useAllSettings();
@@ -146,8 +150,12 @@ export function RecipesPage() {
   return (
     <>
       <PageHeader
-        title="Recipe Inventory"
-        description="Manage costing and margins across your kitchen catalog."
+        title={prepMode ? "In-House Prep" : "Recipe Inventory"}
+        description={
+          prepMode
+            ? "Sauces, doughs, pastes and bases made in-house and used across recipes."
+            : "Manage costing and margins across your kitchen catalog."
+        }
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => navigate("/reports")}>
@@ -156,9 +164,9 @@ export function RecipesPage() {
             {canCreate && (
               <Button
                 className="bg-emerald-800 text-white hover:bg-emerald-900"
-                onClick={() => navigate("/recipes/new")}
+                onClick={() => navigate("/recipes/new", { state: prepMode ? { isPrep: true } : undefined })}
               >
-                <Plus className="h-4 w-4" /> New Recipe
+                <Plus className="h-4 w-4" /> {prepMode ? "New Prep" : "New Recipe"}
               </Button>
             )}
           </div>

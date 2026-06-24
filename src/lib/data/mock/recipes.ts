@@ -1,5 +1,6 @@
 import type {
   Brand,
+  ComponentType,
   Recipe,
   RecipeCostHistory,
   RecipeIngredient,
@@ -7,7 +8,7 @@ import type {
   RecipeVersion,
 } from "../types";
 import { delay, getDb, type MockDb, mutate, nowISO, uid } from "./db";
-import { findMaterial, recomputeRecipe, recordAudit } from "./recompute";
+import { findMaterial, recomputeAndPropagate, recordAudit } from "./recompute";
 
 export interface RecipeHeaderInput {
   recipe_name: string;
@@ -17,10 +18,14 @@ export interface RecipeHeaderInput {
   preparation_time?: number | null;
   serving_size: number;
   selling_price?: number | null;
+  is_prep?: boolean;
+  yield_quantity?: number;
+  yield_unit?: string;
 }
 
 export interface RecipeLineInput {
   ingredient_id: string;
+  component_type?: ComponentType;
   quantity_used: number;
   unit_used: string;
 }
@@ -32,7 +37,14 @@ function attachMaterials(
   return lines
     .slice()
     .sort((a, b) => a.sort_order - b.sort_order)
-    .map((l) => ({ ...l, material: findMaterial(db, l.ingredient_id) ?? null }));
+    .map((l) => ({
+      ...l,
+      material: l.component_type === "recipe" ? null : findMaterial(db, l.ingredient_id) ?? null,
+      subRecipe:
+        l.component_type === "recipe"
+          ? db.recipes.find((r) => r.id === l.ingredient_id) ?? null
+          : null,
+    }));
 }
 
 function snapshotVersion(
@@ -60,12 +72,19 @@ function writeLines(db: MockDb, recipeId: string, lines: RecipeLineInput[]): voi
       id: uid(),
       recipe_id: recipeId,
       ingredient_id: line.ingredient_id,
+      component_type: line.component_type ?? "material",
       quantity_used: line.quantity_used,
       unit_used: line.unit_used,
       calculated_cost: null,
       sort_order: idx,
     });
   });
+}
+
+/** Default a prep's batch yield to the sum of its ingredient grams. */
+function defaultYield(lines: RecipeLineInput[]): number {
+  const sum = lines.reduce((s, l) => s + (l.quantity_used || 0), 0);
+  return sum > 0 ? sum : 1;
 }
 
 export const recipesRepo = {
@@ -117,6 +136,9 @@ export const recipesRepo = {
           total_cost: 0,
           cost_per_portion: 0,
           selling_price: header.selling_price ?? null,
+          is_prep: header.is_prep ?? false,
+          yield_quantity: header.yield_quantity ?? defaultYield(lines),
+          yield_unit: header.yield_unit ?? "Gram",
           created_by: actorId,
           approved_by: null,
           approved_at: null,
@@ -128,7 +150,7 @@ export const recipesRepo = {
         };
         db.recipes.push(recipe);
         writeLines(db, recipe.id, lines);
-        recomputeRecipe(db, recipe.id, actorId, "Recipe created");
+        recomputeAndPropagate(db, [recipe.id], actorId, "Recipe created");
         snapshotVersion(db, recipe, actorId, "Initial version");
         recordAudit(db, {
           entity_type: "recipe",
@@ -170,6 +192,9 @@ export const recipesRepo = {
         recipe.description = header.description ?? null;
         recipe.preparation_time = header.preparation_time ?? null;
         recipe.serving_size = header.serving_size;
+        if (header.is_prep !== undefined) recipe.is_prep = header.is_prep;
+        recipe.yield_quantity = header.yield_quantity ?? defaultYield(lines);
+        recipe.yield_unit = header.yield_unit ?? recipe.yield_unit ?? "Gram";
         recipe.version_no += 1;
         recipe.updated_by = actorId;
 
@@ -182,7 +207,7 @@ export const recipesRepo = {
         }
 
         writeLines(db, recipe.id, lines);
-        recomputeRecipe(db, recipe.id, actorId, "Recipe edited");
+        recomputeAndPropagate(db, [recipe.id], actorId, "Recipe edited");
         snapshotVersion(db, recipe, actorId, `Version ${recipe.version_no}`);
         recordAudit(db, {
           entity_type: "recipe",
@@ -231,11 +256,12 @@ export const recipesRepo = {
             .sort((a, b) => a.sort_order - b.sort_order)
             .map((l) => ({
               ingredient_id: l.ingredient_id,
+              component_type: l.component_type,
               quantity_used: l.quantity_used,
               unit_used: l.unit_used,
             })),
         );
-        recomputeRecipe(db, copy.id, actorId, "Recipe duplicated");
+        recomputeAndPropagate(db, [copy.id], actorId, "Recipe duplicated");
         snapshotVersion(db, copy, actorId, "Duplicated");
         recordAudit(db, {
           entity_type: "recipe",

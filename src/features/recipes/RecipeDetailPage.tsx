@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   Copy,
   Pencil,
@@ -12,6 +12,7 @@ import {
   TrendingUp,
   AlertTriangle,
   ImageUp,
+  ArrowLeft,
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -71,6 +72,8 @@ const emojiFor = (c: string) => CATEGORY_EMOJI[c] ?? "🍽️";
 export function RecipeDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const backTo = (location.state ?? null) as { fromRecipe?: string; fromName?: string } | null;
   const user = useSession((s) => s.user)!;
 
   const { data, isLoading } = useRecipe(id);
@@ -149,6 +152,16 @@ export function RecipeDetailPage() {
 
   return (
     <>
+      {/* Back to parent recipe (when opened from a sub-recipe link) */}
+      {backTo?.fromRecipe && (
+        <button
+          onClick={() => navigate(`/recipes/${backTo.fromRecipe}`)}
+          className="mb-2 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700 hover:underline"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to {backTo.fromName ?? "recipe"}
+        </button>
+      )}
+
       {/* Breadcrumb */}
       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Recipes › {recipe.category}
@@ -217,7 +230,11 @@ export function RecipeDetailPage() {
             <div className="grid sm:grid-cols-2">
               <div className="relative flex h-44 items-center justify-center overflow-hidden bg-gradient-to-br from-emerald-700 to-teal-900 text-6xl">
                 {recipe.image_url ? (
-                  <img src={recipe.image_url} alt={recipe.recipe_name} className="absolute inset-0 h-full w-full object-cover" />
+                  <img
+                    src={recipe.image_url}
+                    alt={recipe.recipe_name}
+                    className="absolute inset-0 h-full w-full object-cover object-center"
+                  />
                 ) : (
                   emojiFor(recipe.category)
                 )}
@@ -270,7 +287,36 @@ export function RecipeDetailPage() {
                   </TableHeader>
                   <TableBody>
                     {ingredients.map((ing) => {
+                      const sub = ing.subRecipe;
                       const m = ing.material;
+                      if (ing.component_type === "recipe" && sub) {
+                        // Sub-recipe (in-house prep) component — double-click to open it.
+                        const perUnit = sub.yield_quantity > 0 ? (sub.total_cost ?? 0) / sub.yield_quantity : 0;
+                        const cost = round2(perUnit * ing.quantity_used * scale);
+                        return (
+                          <TableRow
+                            key={ing.id}
+                            className="cursor-pointer"
+                            title="Double-click to open this prep recipe"
+                            onDoubleClick={() =>
+                              navigate(`/recipes/${sub.id}`, {
+                                state: { fromRecipe: recipe.id, fromName: recipe.recipe_name },
+                              })
+                            }
+                          >
+                            <TableCell className="font-medium">
+                              <span className="inline-flex items-center gap-1.5 text-emerald-700 underline decoration-dotted underline-offset-2">
+                                <UtensilsCrossed className="h-3.5 w-3.5" />
+                                {sub.recipe_name}
+                              </span>
+                              <span className="ml-2 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-emerald-700">Prep</span>
+                            </TableCell>
+                            {vis.quantities && <TableCell className="text-right font-mono">{round3(ing.quantity_used * scale)}</TableCell>}
+                            {vis.quantities && <TableCell className="text-muted-foreground">{ing.unit_used}</TableCell>}
+                            {vis.totalCost && <TableCell className="text-right font-mono font-semibold">{formatINR(cost)}</TableCell>}
+                          </TableRow>
+                        );
+                      }
                       const ok = m && m.cost_per_base_unit !== null && canConvert(ing.unit_used, m.base_unit);
                       // Display the quantity in the ingredient's purchase unit (KG/Litre):
                       // e.g. 600 Gram → 0.6 KG. Cost is for the quantity actually used.

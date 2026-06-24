@@ -47,6 +47,9 @@ create table recipes (
   total_cost       decimal(10,2),
   cost_per_portion decimal(10,2),
   selling_price    decimal(10,2),
+  is_prep          boolean not null default false,
+  yield_quantity   decimal(10,3) not null default 1,
+  yield_unit       text not null default 'Gram',
   created_by       uuid references users(id),
   approved_by      uuid references users(id),
   approved_at      timestamptz,
@@ -60,7 +63,10 @@ create table recipes (
 create table recipe_ingredients (
   id              uuid primary key default gen_random_uuid(),
   recipe_id       uuid not null references recipes(id) on delete cascade,
-  ingredient_id   uuid not null references raw_materials(id),
+  -- component_type 'material' → ingredient_id references raw_materials(id);
+  -- 'recipe' → it references recipes(id) (an in-house prep used as a component).
+  ingredient_id   uuid not null,
+  component_type  text not null default 'material' check (component_type in ('material','recipe')),
   quantity_used   decimal(10,3) not null check (quantity_used > 0),
   unit_used       text not null,
   calculated_cost decimal(10,2),

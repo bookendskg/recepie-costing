@@ -44,6 +44,14 @@ export const router = createBrowserRouter([
       },
       { path: "recipes", element: <RecipesPage /> },
       {
+        path: "prep",
+        element: (
+          <RequireRole roles={["admin", "editor"]}>
+            <RecipesPage prepMode />
+          </RequireRole>
+        ),
+      },
+      {
         path: "recipes/new",
         element: (
           <RequireRole roles={["admin", "editor"]}>

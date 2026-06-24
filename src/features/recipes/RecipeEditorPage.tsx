@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus, Trash2, AlertTriangle } from "lucide-react";
@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { recipeHeaderSchema, type RecipeHeaderValues } from "@/lib/validation/schemas";
 import { compatibleUnits, canConvert } from "@/lib/units";
-import { calculateIngredientCost } from "@/lib/costing";
+import { calculateIngredientCost, round2 } from "@/lib/costing";
 import { formatINR } from "@/lib/utils";
 import { toast } from "@/components/ui/use-toast";
 import { BRANDS, type RawMaterial } from "@/lib/data/types";
@@ -34,8 +34,9 @@ import { useMaterials } from "@/features/raw-materials/hooks";
 import { useFoodCostPct, useCategories } from "@/features/settings/hooks";
 import { useRecipeCosting, type EditorLine } from "@/features/costing/useRecipeCosting";
 import { CostSummary } from "@/features/costing/CostSummary";
-import { IngredientPicker } from "./IngredientPicker";
-import { useCreateRecipe, useRecipe, useSubmitRecipe, useUpdateRecipe } from "./hooks";
+import { IngredientPicker, type ComponentPick } from "./IngredientPicker";
+import { useCreateRecipe, useRecipe, useRecipes, useSubmitRecipe, useUpdateRecipe } from "./hooks";
+import type { Recipe } from "@/lib/data/types";
 
 interface GridLine extends EditorLine {
   key: string;
@@ -48,8 +49,11 @@ export function RecipeEditorPage() {
   const { id } = useParams();
   const isEdit = !!id;
   const navigate = useNavigate();
+  const location = useLocation();
+  const newPrep = !!(location.state as { isPrep?: boolean } | null)?.isPrep;
 
   const { data: materials = [] } = useMaterials();
+  const { data: allRecipes = [] } = useRecipes();
   const { data: categories = [] } = useCategories();
   const { data: foodCostPct = 30 } = useFoodCostPct();
   const { data: existing, isLoading: loadingRecipe } = useRecipe(id);
@@ -64,6 +68,12 @@ export function RecipeEditorPage() {
     materials.forEach((m) => map.set(m.id, m));
     return map;
   }, [materials]);
+  // In-house prep recipes selectable as components (never include this recipe itself).
+  const prepRecipes = useMemo(
+    () => allRecipes.filter((r) => r.is_prep && r.id !== id).sort((a, b) => a.recipe_name.localeCompare(b.recipe_name)),
+    [allRecipes, id],
+  );
+  const prepsById = useMemo(() => new Map<string, Recipe>(allRecipes.map((r) => [r.id, r])), [allRecipes]);
 
   const [lines, setLines] = useState<GridLine[]>([]);
   const [submitOpen, setSubmitOpen] = useState(false);
@@ -100,32 +110,44 @@ export function RecipeEditorPage() {
         existing.ingredients.map((i) => ({
           key: newKey(),
           ingredient_id: i.ingredient_id,
+          component_type: i.component_type,
           quantity_used: i.quantity_used,
           unit_used: i.unit_used,
         })),
       );
     } else if (!isEdit) {
-      setValue("category", categories[0] ?? "");
+      setValue("category", newPrep ? "In-House Prep" : categories[0] ?? "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEdit, existing, categories.length]);
 
   const servingSize = watch("serving_size") || 1;
   const costing = useRecipeCosting(
-    lines.map((l) => ({ ingredient_id: l.ingredient_id, quantity_used: l.quantity_used, unit_used: l.unit_used })),
+    lines.map((l) => ({
+      ingredient_id: l.ingredient_id,
+      component_type: l.component_type,
+      quantity_used: l.quantity_used,
+      unit_used: l.unit_used,
+    })),
     materialsById,
+    prepsById,
     servingSize,
     foodCostPct,
   );
 
   const addLine = () =>
-    setLines((prev) => [...prev, { key: newKey(), ingredient_id: "", quantity_used: 0, unit_used: "" }]);
+    setLines((prev) => [...prev, { key: newKey(), ingredient_id: "", component_type: "material", quantity_used: 0, unit_used: "" }]);
   const removeLine = (key: string) => setLines((prev) => prev.filter((l) => l.key !== key));
   const patchLine = (key: string, patch: Partial<GridLine>) =>
     setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
 
-  const selectMaterial = (key: string, m: RawMaterial) =>
-    patchLine(key, { ingredient_id: m.id, unit_used: m.base_unit });
+  const selectComponent = (key: string, pick: ComponentPick) => {
+    if (pick.type === "recipe") {
+      patchLine(key, { ingredient_id: pick.recipe.id, component_type: "recipe", unit_used: pick.recipe.yield_unit });
+    } else {
+      patchLine(key, { ingredient_id: pick.material.id, component_type: "material", unit_used: pick.material.base_unit });
+    }
+  };
 
   /** Build the validated line payload, or null + toast on a blocking error. */
   const buildLines = (): EditorLine[] | null => {
@@ -145,12 +167,18 @@ export function RecipeEditorPage() {
     }
     return lines.map((l) => ({
       ingredient_id: l.ingredient_id,
+      component_type: l.component_type ?? "material",
       quantity_used: l.quantity_used,
       unit_used: l.unit_used,
     }));
   };
 
-  const saveDraft = handleSubmit(async (header) => {
+  // Preserve prep status on edit; honour the "New Prep" entry point on create.
+  const effectiveIsPrep = isEdit ? existing?.recipe.is_prep ?? false : newPrep;
+  const withPrep = (h: RecipeHeaderValues) => ({ ...h, is_prep: effectiveIsPrep });
+
+  const saveDraft = handleSubmit(async (h) => {
+    const header = withPrep(h);
     const payload = buildLines();
     if (!payload) return;
     try {
@@ -169,7 +197,8 @@ export function RecipeEditorPage() {
   });
 
   // Submit for approval — PRD §5.5 pre-submit validation, then save + submit.
-  const beginSubmit = handleSubmit(async (header) => {
+  const beginSubmit = handleSubmit(async (h) => {
+    const header = withPrep(h);
     const payload = buildLines();
     if (!payload) return;
     if (costing.hasMissingPrice) {
@@ -327,27 +356,30 @@ export function RecipeEditorPage() {
                   <div className="col-span-1" />
                 </div>
                 {lines.map((line) => {
-                  const material = materialsById.get(line.ingredient_id) ?? null;
-                  const units = material ? compatibleUnits(material.base_unit) : [];
-                  const lineCost =
+                  const isPrep = line.component_type === "recipe";
+                  const prep = isPrep ? prepsById.get(line.ingredient_id) ?? null : null;
+                  const material = !isPrep ? materialsById.get(line.ingredient_id) ?? null : null;
+                  const units = prep ? [prep.yield_unit] : material ? compatibleUnits(material.base_unit) : [];
+                  let lineCost: number | null = null;
+                  if (prep && line.quantity_used > 0) {
+                    const perUnit = prep.yield_quantity > 0 ? (prep.total_cost ?? 0) / prep.yield_quantity : 0;
+                    lineCost = round2(perUnit * line.quantity_used);
+                  } else if (
                     material &&
                     material.cost_per_base_unit !== null &&
                     line.quantity_used > 0 &&
                     canConvert(line.unit_used, material.base_unit)
-                      ? calculateIngredientCost(
-                          material.cost_per_base_unit,
-                          line.quantity_used,
-                          line.unit_used,
-                          material.base_unit,
-                        )
-                      : null;
+                  ) {
+                    lineCost = calculateIngredientCost(material.cost_per_base_unit, line.quantity_used, line.unit_used, material.base_unit);
+                  }
                   return (
                     <div key={line.key} className="grid grid-cols-12 items-center gap-2">
                       <div className="col-span-12 sm:col-span-5">
                         <IngredientPicker
                           materials={activeMaterials}
+                          preps={prepRecipes}
                           value={line.ingredient_id || null}
-                          onSelect={(m) => selectMaterial(line.key, m)}
+                          onSelect={(pick) => selectComponent(line.key, pick)}
                         />
                       </div>
                       <div className="col-span-4 sm:col-span-2">
@@ -364,7 +396,7 @@ export function RecipeEditorPage() {
                         <Select
                           value={line.unit_used}
                           onValueChange={(v) => patchLine(line.key, { unit_used: v })}
-                          disabled={!material}
+                          disabled={!material && !prep}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Unit" />
