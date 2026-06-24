@@ -15,7 +15,7 @@ import { navForRole } from "./nav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ROLE_LABELS } from "@/lib/data/types";
-import { useDashboardBrand, brandBgClass, brandFgClass, brandWordmark } from "@/features/dashboard/brandTheme";
+import { useDashboardBrand, brandBgClass, brandAccentText, brandActiveNav, brandWordmark } from "@/features/dashboard/brandTheme";
 import { BrandFilter } from "@/features/dashboard/BrandFilter";
 
 export function AppLayout() {
@@ -37,7 +37,7 @@ export function AppLayout() {
 
   const sidebar = (
     <div className="flex h-full flex-col">
-      <div className="flex h-14 items-center gap-2 border-b border-current/10 px-4">
+      <div className={cn("flex h-14 items-center gap-2 border-b border-black/5 px-4", dark ? "" : brandAccentText(brand))}>
         <ChefHat className="h-6 w-6" />
         <span className="text-sm font-semibold leading-tight">Recipe Costing</span>
       </div>
@@ -51,8 +51,10 @@ export function AppLayout() {
               cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-accent text-accent-foreground"
-                  : "opacity-75 hover:bg-current/10 hover:opacity-100",
+                  ? dark
+                    ? "bg-accent text-accent-foreground"
+                    : brandActiveNav(brand)
+                  : "text-muted-foreground hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10",
               )
             }
           >
@@ -61,10 +63,10 @@ export function AppLayout() {
           </NavLink>
         ))}
       </nav>
-      <div className="border-t border-current/10 p-3">
+      <div className="border-t border-black/5 p-3">
         <div className="mb-2 px-1">
           <p className="truncate text-sm font-medium">{user.name}</p>
-          <Badge variant="outline" className="mt-1 border-current/30">
+          <Badge variant="outline" className="mt-1 border-black/15">
             {ROLE_LABELS[user.role]}
           </Badge>
         </div>
@@ -80,15 +82,15 @@ export function AppLayout() {
     <div
       className={cn(
         "flex h-screen",
-        // Brand colour fills the whole screen in light mode; neutral in dark.
-        dark ? "bg-background" : cn(brandBgClass(brand), brandFgClass(brand)),
+        // Soft brand tint fills the screen in light mode; neutral in dark.
+        dark ? "bg-background" : brandBgClass(brand),
       )}
     >
       {/* Desktop sidebar */}
       <aside
         className={cn(
           "hidden w-60 shrink-0 border-r md:block",
-          dark ? "border-border bg-background" : "border-white/15 bg-black/10",
+          dark ? "border-border bg-background" : "border-black/5 bg-white/50",
         )}
       >
         {sidebar}
@@ -101,7 +103,7 @@ export function AppLayout() {
           <aside
             className={cn(
               "absolute left-0 top-0 h-full w-64 shadow-lg",
-              dark ? "bg-background" : cn(brandBgClass(brand), brandFgClass(brand)),
+              dark ? "bg-background" : "bg-white",
             )}
           >
             {sidebar}
@@ -113,7 +115,7 @@ export function AppLayout() {
         <header
           className={cn(
             "flex h-14 items-center justify-between border-b px-4",
-            dark ? "border-border bg-background" : "border-white/15 bg-black/10",
+            dark ? "border-border bg-background" : "border-black/5 bg-white/50",
           )}
         >
           <Button
@@ -142,7 +144,7 @@ export function AppLayout() {
               className="pointer-events-none absolute inset-x-0 top-0 z-0 flex h-[70vh] items-center justify-center overflow-hidden"
             >
               <span
-                className="select-none whitespace-nowrap font-black leading-none tracking-tighter opacity-[0.06]"
+                className={cn("select-none whitespace-nowrap font-black leading-none tracking-tighter opacity-[0.05]", brandAccentText(brand))}
                 style={{ fontSize: `${Math.min(22, 92 / brandWordmark[brand].length)}vw` }}
               >
                 {brandWordmark[brand]}

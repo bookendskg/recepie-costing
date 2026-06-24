@@ -98,10 +98,10 @@ export function OperationsDashboard({ brand }: { brand: Brand }) {
           <p className="text-sm opacity-80">Real-time performance metrics for {brandLabel}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="bg-white/90 text-slate-900">
+          <Button variant="outline" className="bg-white">
             <Calendar className="h-4 w-4" /> Last 24 Hours
           </Button>
-          <Button variant="outline" className="bg-white/90 text-slate-900">
+          <Button variant="outline" className="bg-white">
             <FileDown className="h-4 w-4" /> Export PDF
           </Button>
         </div>
