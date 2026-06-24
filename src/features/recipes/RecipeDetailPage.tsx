@@ -237,14 +237,23 @@ export function RecipeDetailPage() {
                     {ingredients.map((ing) => {
                       const m = ing.material;
                       const ok = m && m.cost_per_base_unit !== null && canConvert(ing.unit_used, m.base_unit);
-                      const pricePerUnit = ok ? calculateIngredientCost(m!.cost_per_base_unit!, 1, ing.unit_used, m!.base_unit) : null;
+                      // Reference price per purchase unit (e.g. ₹500 / KG); subtotal is the
+                      // cost of the quantity actually used in the recipe (e.g. 50 g).
+                      const pricePerPurchaseUnit =
+                        m && m.purchase_price !== null && m.purchase_quantity
+                          ? m.purchase_price / m.purchase_quantity
+                          : null;
                       const subtotal = ok ? round2(calculateIngredientCost(m!.cost_per_base_unit!, ing.quantity_used, ing.unit_used, m!.base_unit) * scale) : null;
                       return (
                         <TableRow key={ing.id}>
                           <TableCell className="font-medium">{m?.ingredient_name ?? "—"}</TableCell>
                           {vis.quantities && <TableCell className="text-right font-mono">{round2(ing.quantity_used * scale)}</TableCell>}
                           {vis.quantities && <TableCell className="text-muted-foreground">{ing.unit_used}</TableCell>}
-                          {vis.unitCosts && <TableCell className="text-right font-mono text-muted-foreground">{formatINR(pricePerUnit)}</TableCell>}
+                          {vis.unitCosts && (
+                            <TableCell className="text-right font-mono text-muted-foreground">
+                              {pricePerPurchaseUnit === null ? "—" : `${formatINR(pricePerPurchaseUnit)} / ${m!.purchase_unit}`}
+                            </TableCell>
+                          )}
                           {vis.totalCost && <TableCell className="text-right font-mono font-semibold">{formatINR(subtotal)}</TableCell>}
                         </TableRow>
                       );
