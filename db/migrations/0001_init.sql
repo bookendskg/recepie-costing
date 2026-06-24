@@ -47,6 +47,7 @@ create table recipes (
   total_cost       decimal(10,2),
   cost_per_portion decimal(10,2),
   selling_price    decimal(10,2),
+  wastage_pct      decimal(5,2) not null default 0,
   is_prep          boolean not null default false,
   yield_quantity   decimal(10,3) not null default 1,
   yield_unit       text not null default 'Gram',

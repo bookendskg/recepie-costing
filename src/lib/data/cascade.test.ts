@@ -40,7 +40,9 @@ describe("price cascade", () => {
     );
 
     const after = (await recipesRepo.getById("r-aglio-olio"))!.total_cost!;
-    expect(after - before).toBeCloseTo(15, 1);
+    // +₹15 raw, then +5% wastage ⇒ ≈ ₹15.75 increase in the recipe total.
+    expect(after - before).toBeGreaterThan(15);
+    expect(after - before).toBeLessThan(16.5);
 
     const history = await recipesRepo.costHistory("r-aglio-olio");
     expect(history.length).toBe(1);

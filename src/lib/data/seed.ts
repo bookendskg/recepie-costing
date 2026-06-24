@@ -214,28 +214,30 @@ const menuDefs: RecipeDef[] = [
   ] },
 ];
 
+const WASTAGE_PCT = 5; // standard wastage from the costing sheet
+
 const allDefs = [...prepDefs, ...menuDefs];
 const defById = new Map(allDefs.map((d) => [d.id, d]));
 const yieldOf = (d: RecipeDef) => d.lines.reduce((s, l) => s + l.g, 0) || 1;
 
-// Memoised, cycle-guarded total cost (preps computed before the menus use them).
+// Memoised, cycle-guarded total cost incl. wastage (preps before the menus).
 const totalMemo = new Map<string, number>();
 function totalOf(id: string, stack = new Set<string>()): number {
   if (totalMemo.has(id)) return totalMemo.get(id)!;
   if (stack.has(id)) return 0;
   stack.add(id);
   const d = defById.get(id)!;
-  let total = 0;
+  let raw = 0;
   for (const l of d.lines) {
     if ("r" in l) {
       const sub = defById.get(l.r)!;
-      total += round2((totalOf(l.r, stack) / yieldOf(sub)) * l.g);
+      raw += round2((totalOf(l.r, stack) / yieldOf(sub)) * l.g);
     } else {
-      total += round2((matPerGram.get(l.m) ?? 0) * l.g);
+      raw += round2((matPerGram.get(l.m) ?? 0) * l.g);
     }
   }
   stack.delete(id);
-  const t = round2(total);
+  const t = round2(raw * (1 + WASTAGE_PCT / 100));
   totalMemo.set(id, t);
   return t;
 }
@@ -275,6 +277,7 @@ for (const d of allDefs) {
     selling_price: d.selling ?? null,
     total_cost: total,
     cost_per_portion: total,
+    wastage_pct: WASTAGE_PCT,
     is_prep: d.isPrep,
     yield_quantity: yieldOf(d),
     yield_unit: "Gram",

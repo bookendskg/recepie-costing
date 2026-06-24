@@ -52,14 +52,15 @@ export function recomputeRecipe(
   if (!recipe) return false;
 
   const lines = db.recipe_ingredients.filter((ri) => ri.recipe_id === recipeId);
-  let total = 0;
+  let rawTotal = 0;
   for (const line of lines) {
     const cost = lineCost(db, line);
     line.calculated_cost = cost;
-    if (cost !== null) total += cost;
+    if (cost !== null) rawTotal += cost;
   }
 
-  const newTotal = round2(total);
+  // Add wastage on top of the raw ingredient cost (compounds through preps).
+  const newTotal = round2(rawTotal * (1 + (recipe.wastage_pct ?? 0) / 100));
   const newPerPortion = recipe.serving_size > 0 ? round2(newTotal / recipe.serving_size) : 0;
   const oldTotal = recipe.total_cost ?? 0;
   const changed = newTotal !== oldTotal;

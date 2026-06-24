@@ -142,6 +142,9 @@ export function RecipeDetailPage() {
   const showFinancials = vis.totalCost;
 
   const batchCost = round2((recipe.total_cost ?? 0) * scale);
+  // Raw ingredient cost (before wastage) = total ÷ (1 + wastage%).
+  const rawIngredientCost = round2(batchCost / (1 + (recipe.wastage_pct ?? 0) / 100));
+  const wastageAmount = round2(batchCost - rawIngredientCost);
   const portionCost = recipe.cost_per_portion ?? 0;
   const menuPrice = menuPriceOf(recipe, foodCostPct);
   const marginPct = menuPrice > 0 ? round2(((menuPrice - portionCost) / menuPrice) * 100) : 0;
@@ -336,14 +339,30 @@ export function RecipeDetailPage() {
                       );
                     })}
                     {vis.totalCost && (
-                      <TableRow className="border-t-2">
-                        <TableCell colSpan={vis.quantities ? 3 : 1} className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Total Raw Ingredient Cost
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-base font-bold text-emerald-700">
-                          {formatINR(batchCost)}
-                        </TableCell>
-                      </TableRow>
+                      <>
+                        <TableRow className="border-t-2">
+                          <TableCell colSpan={vis.quantities ? 3 : 1} className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Total Raw Ingredient Cost
+                          </TableCell>
+                          <TableCell className="text-right font-mono">{formatINR(rawIngredientCost)}</TableCell>
+                        </TableRow>
+                        {(recipe.wastage_pct ?? 0) > 0 && (
+                          <TableRow>
+                            <TableCell colSpan={vis.quantities ? 3 : 1} className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                              Wastage ({recipe.wastage_pct}%)
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-amber-600">+{formatINR(wastageAmount)}</TableCell>
+                          </TableRow>
+                        )}
+                        <TableRow>
+                          <TableCell colSpan={vis.quantities ? 3 : 1} className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Total Recipe Cost
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-base font-bold text-emerald-700">
+                            {formatINR(batchCost)}
+                          </TableCell>
+                        </TableRow>
+                      </>
                     )}
                   </TableBody>
                 </Table>

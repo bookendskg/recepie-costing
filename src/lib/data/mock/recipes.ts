@@ -18,6 +18,7 @@ export interface RecipeHeaderInput {
   preparation_time?: number | null;
   serving_size: number;
   selling_price?: number | null;
+  wastage_pct?: number;
   is_prep?: boolean;
   yield_quantity?: number;
   yield_unit?: string;
@@ -136,6 +137,7 @@ export const recipesRepo = {
           total_cost: 0,
           cost_per_portion: 0,
           selling_price: header.selling_price ?? null,
+          wastage_pct: header.wastage_pct ?? 0,
           is_prep: header.is_prep ?? false,
           yield_quantity: header.yield_quantity ?? defaultYield(lines),
           yield_unit: header.yield_unit ?? "Gram",
@@ -189,6 +191,7 @@ export const recipesRepo = {
         recipe.category = header.category;
         recipe.brand = header.brand;
         recipe.selling_price = header.selling_price ?? null;
+        recipe.wastage_pct = header.wastage_pct ?? 0;
         recipe.description = header.description ?? null;
         recipe.preparation_time = header.preparation_time ?? null;
         recipe.serving_size = header.serving_size;

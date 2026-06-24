@@ -25,6 +25,13 @@ describe("sub-recipe (in-house prep) costing", () => {
     expect(dough!.yield_quantity).toBeGreaterThan(0);
   });
 
+  it("recipe total includes the wastage % on top of the raw ingredient cost", async () => {
+    const data = await recipesRepo.getWithIngredients("r-aglio-olio");
+    const rawSum = data!.ingredients.reduce((s, i) => s + (i.calculated_cost ?? 0), 0);
+    expect(data!.recipe.wastage_pct).toBe(5);
+    expect(data!.recipe.total_cost!).toBeCloseTo(rawSum * 1.05, 1);
+  });
+
   it("raising a leaf material price rolls up through the prep to the menu item", async () => {
     const flour = await materialsRepo.getById("m-00-flour");
     const doughBefore = (await recipesRepo.getById("r-prep-pizza-dough"))!.total_cost!;

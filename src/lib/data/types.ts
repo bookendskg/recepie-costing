@@ -57,6 +57,8 @@ export interface Recipe {
   cost_per_portion: number | null;
   /** Actual menu price set by the chef. Null → use the suggested price. */
   selling_price: number | null;
+  /** Wastage % added on top of the raw ingredient cost (PRD / sheet "Wastage"). */
+  wastage_pct: number;
   /** True for in-house prep recipes (sauces, doughs, pastes) used as components. */
   is_prep: boolean;
   /** Batch output used to derive a prep's per-unit cost (defaults to sum of grams). */

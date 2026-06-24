@@ -40,6 +40,7 @@ export function useRecipeCosting(
   prepsById: Map<string, Recipe>,
   servingSize: number,
   foodCostPct: number,
+  wastagePct = 0,
 ): RecipeCostingView {
   return useMemo(() => {
     const costed: CostedLine[] = lines.map((l) => {
@@ -64,7 +65,8 @@ export function useRecipeCosting(
       return { ...l, material, subRecipe: null, cost, missingPrice, unitMismatch };
     });
 
-    const totalCost = round2(costed.reduce((s, l) => s + (l.cost ?? 0), 0));
+    const rawCost = costed.reduce((s, l) => s + (l.cost ?? 0), 0);
+    const totalCost = round2(rawCost * (1 + wastagePct / 100));
     const serving = servingSize > 0 ? servingSize : 1;
     const rawCpp = totalCost / serving;
     const rawSuggested = foodCostPct > 0 ? rawCpp / (foodCostPct / 100) : 0;
@@ -81,5 +83,5 @@ export function useRecipeCosting(
       lines: costed,
       hasMissingPrice: costed.some((l) => l.missingPrice),
     };
-  }, [lines, materialsById, prepsById, servingSize, foodCostPct]);
+  }, [lines, materialsById, prepsById, servingSize, foodCostPct, wastagePct]);
 }

@@ -61,6 +61,10 @@ export const recipeHeaderSchema = z.object({
     .positive("Menu price must be greater than 0")
     .optional()
     .nullable(),
+  wastage_pct: z
+    .number({ invalid_type_error: "Enter a valid %" })
+    .min(0, "Wastage cannot be negative")
+    .max(100, "Wastage must be 100% or less"),
 });
 export type RecipeHeaderValues = z.infer<typeof recipeHeaderSchema>;
 

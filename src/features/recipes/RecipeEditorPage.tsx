@@ -90,6 +90,7 @@ export function RecipeEditorPage() {
       preparation_time: null,
       serving_size: 1,
       selling_price: null,
+      wastage_pct: 0,
     },
   });
   const { register, handleSubmit, reset, watch, setValue, formState } = form;
@@ -105,6 +106,7 @@ export function RecipeEditorPage() {
         preparation_time: existing.recipe.preparation_time,
         serving_size: 1, // single-portion recipes
         selling_price: existing.recipe.selling_price,
+        wastage_pct: existing.recipe.wastage_pct,
       });
       setLines(
         existing.ingredients.map((i) => ({
@@ -133,6 +135,7 @@ export function RecipeEditorPage() {
     prepsById,
     servingSize,
     foodCostPct,
+    watch("wastage_pct") || 0,
   );
 
   const addLine = () =>
@@ -325,6 +328,20 @@ export function RecipeEditorPage() {
               />
               <p className="text-xs text-muted-foreground">
                 The actual menu price. Drives the food cost % shown on the recipe list.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Wastage (%)</Label>
+              <Input
+                type="number"
+                step="0.1"
+                {...register("wastage_pct", { setValueAs: (v) => (v === "" ? 0 : Number(v)) })}
+              />
+              {formState.errors.wastage_pct && (
+                <p className="text-xs text-destructive">{formState.errors.wastage_pct.message}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Added on top of the raw ingredient cost (e.g. trimming/peeling loss).
               </p>
             </div>
             <div className="space-y-1.5">
