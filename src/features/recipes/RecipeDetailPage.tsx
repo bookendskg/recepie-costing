@@ -288,7 +288,9 @@ export function RecipeDetailPage() {
                 <TabsContent value="financials">
                   <div className="space-y-1 py-2 text-sm">
                     <FinRow label="Total Recipe Cost" value={formatINR(recipe.total_cost)} />
-                    <FinRow label={`Cost Per Portion (÷${recipe.serving_size})`} value={formatINR(portionCost)} />
+                    {recipe.serving_size > 1 && (
+                      <FinRow label={`Cost Per Portion (÷${recipe.serving_size})`} value={formatINR(portionCost)} />
+                    )}
                     <FinRow label={`Suggested Price (${foodCostPct}% food cost)`} value={formatINR(round2(portionCost / (foodCostPct / 100)))} strong />
                     <FinRow label="Menu Price" value={formatINR(menuPrice)} />
                     <FinRow label="Gross Margin" value={`${marginPct}%`} />
@@ -341,8 +343,10 @@ export function RecipeDetailPage() {
                   <TrendingUp className="h-4 w-4 text-emerald-600" />
                 </div>
                 <div className="space-y-3 text-sm">
-                  <FinRow label="Total Batch Cost" value={formatINR(batchCost)} strong />
-                  <FinRow label={`Portion Cost (1/${recipe.serving_size})`} value={formatINR(portionCost)} accent />
+                  <FinRow label="Total Recipe Cost" value={formatINR(batchCost)} strong />
+                  {recipe.serving_size > 1 && (
+                    <FinRow label={`Portion Cost (1/${recipe.serving_size})`} value={formatINR(portionCost)} accent />
+                  )}
                 </div>
 
                 <div className="my-4 grid grid-cols-2 gap-3 rounded-lg bg-emerald-50 p-3">

@@ -93,7 +93,7 @@ export function RecipeEditorPage() {
         brand: existing.recipe.brand,
         description: existing.recipe.description ?? "",
         preparation_time: existing.recipe.preparation_time,
-        serving_size: existing.recipe.serving_size,
+        serving_size: 1, // single-portion recipes
         selling_price: existing.recipe.selling_price,
       });
       setLines(
@@ -273,27 +273,17 @@ export function RecipeEditorPage() {
                   <p className="text-xs text-destructive">{formState.errors.category.message}</p>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label>Prep (min)</Label>
-                  <Input
-                    type="number"
-                    {...register("preparation_time", {
-                      setValueAs: (v) => (v === "" || v === null ? null : Number(v)),
-                    })}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Serving Size *</Label>
-                  <Input type="number" {...register("serving_size", { valueAsNumber: true })} />
-                  {formState.errors.serving_size && (
-                    <p className="text-xs text-destructive">
-                      {formState.errors.serving_size.message}
-                    </p>
-                  )}
-                </div>
+              <div className="space-y-1.5">
+                <Label>Prep (min)</Label>
+                <Input
+                  type="number"
+                  {...register("preparation_time", {
+                    setValueAs: (v) => (v === "" || v === null ? null : Number(v)),
+                  })}
+                />
               </div>
             </div>
+            {/* Recipes are single-portion: serving size is fixed at 1. */}
             <div className="space-y-1.5">
               <Label>Menu Price (₹)</Label>
               <Input

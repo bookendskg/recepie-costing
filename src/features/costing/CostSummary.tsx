@@ -41,7 +41,7 @@ export function CostSummary(props: CostSummaryProps) {
     <div className="rounded-lg border bg-muted/40 p-4">
       <p className="mb-2 text-sm font-semibold">Cost Summary</p>
       {showCost && <Row label="Total Recipe Cost" value={formatINR(props.totalCost)} />}
-      {showPortion && (
+      {showPortion && props.servingSize > 1 && (
         <Row
           label={`Cost Per Portion (÷${props.servingSize})`}
           value={formatINR(props.costPerPortion)}
