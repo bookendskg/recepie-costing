@@ -7,6 +7,7 @@ import {
   Users,
   Settings,
   ScrollText,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 import type { Role } from "@/lib/data/types";
@@ -21,6 +22,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "editor", "viewer"] },
   { to: "/materials", label: "Raw Materials", icon: Beef, roles: ["admin", "editor"] },
+  { to: "/inventory", label: "Inventory", icon: ClipboardList, roles: ["admin", "editor"] },
   { to: "/recipes", label: "Recipes", icon: BookOpen, roles: ["admin", "editor", "viewer"] },
   { to: "/approvals", label: "Approvals", icon: CheckCircle2, roles: ["admin"] },
   { to: "/reports", label: "Reports", icon: FileBarChart, roles: ["admin", "editor"] },
