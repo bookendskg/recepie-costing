@@ -79,6 +79,7 @@ export function RecipeEditorPage() {
       description: "",
       preparation_time: null,
       serving_size: 1,
+      selling_price: null,
     },
   });
   const { register, handleSubmit, reset, watch, setValue, formState } = form;
@@ -93,6 +94,7 @@ export function RecipeEditorPage() {
         description: existing.recipe.description ?? "",
         preparation_time: existing.recipe.preparation_time,
         serving_size: existing.recipe.serving_size,
+        selling_price: existing.recipe.selling_price,
       });
       setLines(
         existing.ingredients.map((i) => ({
@@ -291,6 +293,20 @@ export function RecipeEditorPage() {
                   )}
                 </div>
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Menu Price (₹)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="Leave blank to use the suggested price"
+                {...register("selling_price", {
+                  setValueAs: (v) => (v === "" || v === null ? null : Number(v)),
+                })}
+              />
+              <p className="text-xs text-muted-foreground">
+                The actual menu price. Drives the food cost % shown on the recipe list.
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label>Description</Label>

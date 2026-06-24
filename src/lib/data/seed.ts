@@ -108,6 +108,7 @@ interface RecipeSeed {
   status: Recipe["status"];
   createdBy: string;
   approvedBy?: string;
+  selling?: number;
   lines: { matId: string; qty: number; unit: string }[];
 }
 
@@ -123,6 +124,7 @@ const recipeSeeds: RecipeSeed[] = [
     status: "approved",
     createdBy: U_EDITOR,
     approvedBy: U_ADMIN,
+    selling: 199,
     lines: [
       { matId: "m-chicken", qty: 500, unit: "Gram" },
       { matId: "m-pasta", qty: 200, unit: "Gram" },
@@ -141,6 +143,7 @@ const recipeSeeds: RecipeSeed[] = [
     serving: 6,
     status: "testing",
     createdBy: U_EDITOR,
+    selling: 52,
     lines: [
       { matId: "m-rice", qty: 500, unit: "Gram" },
       { matId: "m-onion", qty: 200, unit: "Gram" },
@@ -158,6 +161,7 @@ const recipeSeeds: RecipeSeed[] = [
     serving: 8,
     status: "draft",
     createdBy: U_EDITOR,
+    selling: 28,
     lines: [
       { matId: "m-cream", qty: 400, unit: "ML" },
       { matId: "m-cocoa", qty: 80, unit: "Gram" },
@@ -174,6 +178,7 @@ const recipeSeeds: RecipeSeed[] = [
     serving: 10,
     status: "draft",
     createdBy: U_EDITOR,
+    selling: 92,
     lines: [
       { matId: "m-milk", qty: 1500, unit: "ML" },
       { matId: "m-tea", qty: 40, unit: "Gram" },
@@ -214,6 +219,7 @@ for (const rs of recipeSeeds) {
     preparation_time: rs.prep,
     serving_size: rs.serving,
     status: rs.status,
+    selling_price: rs.selling ?? null,
     total_cost: totalCost,
     cost_per_portion: parseFloat((totalCost / rs.serving).toFixed(2)),
     created_by: rs.createdBy,

@@ -56,6 +56,11 @@ export const recipeHeaderSchema = z.object({
     .number({ invalid_type_error: "Serving size must be at least 1" })
     .int()
     .min(1, "Serving size must be at least 1"),
+  selling_price: z
+    .number({ invalid_type_error: "Enter a valid price" })
+    .positive("Menu price must be greater than 0")
+    .optional()
+    .nullable(),
 });
 export type RecipeHeaderValues = z.infer<typeof recipeHeaderSchema>;
 

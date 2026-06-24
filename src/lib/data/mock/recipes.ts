@@ -16,6 +16,7 @@ export interface RecipeHeaderInput {
   description?: string | null;
   preparation_time?: number | null;
   serving_size: number;
+  selling_price?: number | null;
 }
 
 export interface RecipeLineInput {
@@ -114,6 +115,7 @@ export const recipesRepo = {
           status: "draft",
           total_cost: 0,
           cost_per_portion: 0,
+          selling_price: header.selling_price ?? null,
           created_by: actorId,
           approved_by: null,
           approved_at: null,
@@ -162,6 +164,7 @@ export const recipesRepo = {
         recipe.recipe_name = header.recipe_name;
         recipe.category = header.category;
         recipe.brand = header.brand;
+        recipe.selling_price = header.selling_price ?? null;
         recipe.description = header.description ?? null;
         recipe.preparation_time = header.preparation_time ?? null;
         recipe.serving_size = header.serving_size;

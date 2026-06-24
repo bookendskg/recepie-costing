@@ -45,6 +45,7 @@ create table recipes (
   status           text not null default 'draft' check (status in ('draft','testing','approved','rejected')),
   total_cost       decimal(10,2),
   cost_per_portion decimal(10,2),
+  selling_price    decimal(10,2),
   created_by       uuid references users(id),
   approved_by      uuid references users(id),
   approved_at      timestamptz,

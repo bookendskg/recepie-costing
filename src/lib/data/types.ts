@@ -53,6 +53,8 @@ export interface Recipe {
   status: RecipeStatus;
   total_cost: number | null;
   cost_per_portion: number | null;
+  /** Actual menu price set by the chef. Null → use the suggested price. */
+  selling_price: number | null;
   created_by: string | null;
   approved_by: string | null;
   approved_at: string | null;
