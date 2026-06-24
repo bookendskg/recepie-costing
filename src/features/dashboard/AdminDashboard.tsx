@@ -26,6 +26,7 @@ import { useAuditLogs } from "@/features/audit/hooks";
 import { useFoodCostPct, useAllSettings } from "@/features/settings/hooks";
 import { foodCostPctOf } from "@/features/recipes/recipeMetrics";
 import { useDashboardBrand, brandWordmark } from "./brandTheme";
+import { OperationsDashboard } from "./OperationsDashboard";
 
 export function AdminDashboard() {
   const navigate = useNavigate();
@@ -93,6 +94,9 @@ export function AdminDashboard() {
   );
 
   const marginHealth = Math.max(0, Math.round(100 - stats.avgFc));
+
+  // A specific brand → its dedicated Operations Dashboard (Capiche red / Aiko gold).
+  if (brand !== "all") return <OperationsDashboard brand={brand} />;
 
   return (
     <>
