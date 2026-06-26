@@ -224,6 +224,19 @@ const allDefs = [...prepDefs, ...menuDefs];
 const defById = new Map(allDefs.map((d) => [d.id, d]));
 const yieldOf = (d: RecipeDef) => d.lines.reduce((s, l) => s + l.g, 0) || 1;
 
+// Seeded standard yields (MUST match the ingredient_yields built in buildSeed).
+// Effective per-gram = purchase cost ÷ usable grams, so seeded recipe costs match
+// the yield-adjusted runtime recompute (§9).
+const SEED_YIELD_WASTAGE: Record<string, number> = { "m-onion": 20, "m-ginger": 15, "m-carrot": 10 };
+const yieldAdjPerGram = new Map<string, number>();
+for (const [matId, wastagePct] of Object.entries(SEED_YIELD_WASTAGE)) {
+  const perGram = matPerGram.get(matId);
+  if (perGram == null) continue;
+  const usableG = 1000 * (1 - wastagePct / 100);
+  yieldAdjPerGram.set(matId, (perGram * 1000) / usableG);
+}
+const effPerGram = (id: string) => yieldAdjPerGram.get(id) ?? matPerGram.get(id) ?? 0;
+
 // Memoised, cycle-guarded total cost incl. wastage (preps before the menus).
 const totalMemo = new Map<string, number>();
 function totalOf(id: string, stack = new Set<string>()): number {
@@ -238,7 +251,7 @@ function totalOf(id: string, stack = new Set<string>()): number {
       // Use the prep's pre-wastage per-gram so wastage isn't double-counted.
       raw += round2(prepUnitCostFrom(totalOf(l.r, stack), yieldOf(sub), WASTAGE_PCT) * l.g);
     } else {
-      raw += round2((matPerGram.get(l.m) ?? 0) * l.g);
+      raw += round2(effPerGram(l.m) * l.g);
     }
   }
   stack.delete(id);
@@ -257,7 +270,7 @@ for (const d of allDefs) {
     const refId = isRecipe ? l.r : l.m;
     const cost = isRecipe
       ? round2(prepUnitCostFrom(totalOf(refId), yieldOf(defById.get(refId)!), WASTAGE_PCT) * l.g)
-      : round2((matPerGram.get(refId) ?? 0) * l.g);
+      : round2(effPerGram(refId) * l.g);
     recipe_ingredients.push({
       id: `${d.id}-i${idx}`,
       recipe_id: d.id,
@@ -327,11 +340,20 @@ function yieldRow(id: string, ingredient_id: string, purchaseCost: number, wasta
 
 export function buildSeed(): MockDb {
   const hoursAgo = (h: number) => new Date(Date.now() - h * 3600_000).toISOString();
+  const dAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
   return {
     ingredient_yields: [
       yieldRow("iy-onion", "m-onion", 150, 20),
       yieldRow("iy-ginger", "m-ginger", 130, 15),
       yieldRow("iy-carrot", "m-carrot", 50, 10),
+    ],
+    wastage_entries: [
+      // ingredient @ yield-adjusted rate (onion 150/800 = 0.1875/g)
+      { id: "w-1", wastage_date: dAgo(0), brand: "capiche", outlet_id: "capiche-piplod", wastage_type: "Spoilage", item_type: "ingredient", ingredient_id: "m-onion", recipe_id: null, quantity: 500, unit: "Gram", unit_cost: round2(150 / 800), total_cost: round2((150 / 800) * 500), reason: "Soft / sprouted stock", department: "Store", shift: "Morning", entered_by: U_EDITOR, approved_by: null, notes: null, created_at: hoursAgo(3), updated_at: hoursAgo(3) },
+      { id: "w-2", wastage_date: dAgo(1), brand: "aiko", outlet_id: "aiko-pal", wastage_type: "Overproduction", item_type: "recipe", ingredient_id: null, recipe_id: "r-avo-crispy-rice", quantity: 3, unit: "Portion", unit_cost: 76.2, total_cost: round2(76.2 * 3), reason: "Prepped too many for dinner service", department: "Kitchen", shift: "Evening", entered_by: U_ADMIN, approved_by: U_ADMIN, notes: null, created_at: hoursAgo(26), updated_at: hoursAgo(26) },
+      { id: "w-3", wastage_date: dAgo(2), brand: "capiche", outlet_id: "capiche-vesu", wastage_type: "Cooking Wastage", item_type: "recipe", ingredient_id: null, recipe_id: "r-aglio-olio", quantity: 1, unit: "Portion", unit_cost: 74.9, total_cost: 74.9, reason: "Burnt", department: "Kitchen", shift: "Evening", entered_by: U_EDITOR, approved_by: null, notes: null, created_at: hoursAgo(50), updated_at: hoursAgo(50) },
+      { id: "w-4", wastage_date: dAgo(4), brand: "capiche", outlet_id: "capiche-ambli", wastage_type: "Expired Stock", item_type: "ingredient", ingredient_id: "m-ginger", recipe_id: null, quantity: 300, unit: "Gram", unit_cost: round2(130 / 850), total_cost: round2((130 / 850) * 300), reason: "Past shelf life", department: "Store", shift: "Morning", entered_by: U_ADMIN, approved_by: null, notes: null, created_at: hoursAgo(98), updated_at: hoursAgo(98) },
+      { id: "w-5", wastage_date: dAgo(6), brand: "aiko", outlet_id: "aiko-ambli", wastage_type: "Preparation Wastage", item_type: "ingredient", ingredient_id: "m-carrot", recipe_id: null, quantity: 400, unit: "Gram", unit_cost: round2(50 / 900), total_cost: round2((50 / 900) * 400), reason: "Trimming loss above standard", department: "Central Kitchen", shift: "Morning", entered_by: U_EDITOR, approved_by: null, notes: null, created_at: hoursAgo(146), updated_at: hoursAgo(146) },
     ],
     users: structuredClone(users),
     raw_materials: structuredClone(raw_materials),

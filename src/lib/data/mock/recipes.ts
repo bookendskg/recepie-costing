@@ -30,6 +30,8 @@ export interface RecipeLineInput {
   component_type?: ComponentType;
   quantity_used: number;
   unit_used: string;
+  /** Recipe-specific wastage % override (§10); null/undefined → standard yield. */
+  wastage_override_pct?: number | null;
 }
 
 function attachMaterials(
@@ -79,6 +81,7 @@ function writeLines(db: MockDb, recipeId: string, lines: RecipeLineInput[]): voi
       unit_used: line.unit_used,
       calculated_cost: null,
       sort_order: idx,
+      wastage_override_pct: line.wastage_override_pct ?? null,
     });
   });
 }

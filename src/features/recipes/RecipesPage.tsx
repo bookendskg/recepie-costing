@@ -36,8 +36,6 @@ import {
 import { cn, formatDateTime, formatINR } from "@/lib/utils";
 import { useSession } from "@/lib/auth/session";
 import { can, canEditRecipe, viewerBrands, viewerShowCost } from "@/lib/auth/permissions";
-import { calculateIngredientCost } from "@/lib/costing";
-import { canConvert } from "@/lib/units";
 import type { Recipe } from "@/lib/data/types";
 import { toast } from "@/components/ui/use-toast";
 import { useRecipeCategories, useFoodCostPct, useAllSettings } from "@/features/settings/hooks";
@@ -497,17 +495,11 @@ function ExpandedBreakdown({
   const actualFc = foodCostPctOf(recipe, foodCostPct);
   const variance = Number((actualFc - foodCostPct).toFixed(1));
 
-  const lines = (data?.ingredients ?? []).map((ing) => {
-    const m = ing.material;
-    const cost =
-      m && m.cost_per_base_unit !== null && canConvert(ing.unit_used, m.base_unit)
-        ? calculateIngredientCost(m.cost_per_base_unit, ing.quantity_used, ing.unit_used, m.base_unit)
-        : null;
-    return {
-      name: `${m?.ingredient_name ?? "—"} (${ing.quantity_used}${ing.unit_used})`,
-      cost,
-    };
-  });
+  // Use the persisted (yield-adjusted) line cost — single source of truth (§9).
+  const lines = (data?.ingredients ?? []).map((ing) => ({
+    name: `${ing.material?.ingredient_name ?? "—"} (${ing.quantity_used}${ing.unit_used})`,
+    cost: ing.calculated_cost,
+  }));
   const mid = Math.ceil(lines.length / 2);
 
   return (

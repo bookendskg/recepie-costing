@@ -14,6 +14,7 @@ import type {
   SystemSetting,
   User,
   UserRecipeView,
+  WastageEntry,
 } from "../types";
 import { buildSeed } from "../seed";
 
@@ -25,6 +26,7 @@ export interface MockDb {
   recipe_cost_history: RecipeCostHistory[];
   ingredient_price_history: IngredientPriceHistory[];
   ingredient_yields: IngredientYield[];
+  wastage_entries: WastageEntry[];
   recipe_versions: RecipeVersion[];
   user_recipe_views: UserRecipeView[];
   audit_logs: AuditLog[];
@@ -32,7 +34,7 @@ export interface MockDb {
 }
 
 // Bump this when the seed/DB shape changes so stale localStorage data is reseeded.
-const STORAGE_KEY = "rcms.mockdb.v18";
+const STORAGE_KEY = "rcms.mockdb.v19";
 
 let cache: MockDb | null = null;
 

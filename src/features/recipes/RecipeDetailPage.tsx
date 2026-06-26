@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { cn, formatDate, formatINR } from "@/lib/utils";
-import { calculateIngredientCost, prepUnitCostFrom, round2 } from "@/lib/costing";
+import { prepUnitCostFrom, round2 } from "@/lib/costing";
 import { canConvert, getConversionFactor } from "@/lib/units";
 
 const round3 = (n: number) => Math.round(n * 1000) / 1000;
@@ -318,7 +318,6 @@ export function RecipeDetailPage() {
                           </TableRow>
                         );
                       }
-                      const ok = m && m.cost_per_base_unit !== null && canConvert(ing.unit_used, m.base_unit);
                       // Display the quantity in the ingredient's purchase unit (KG/Litre):
                       // e.g. 600 Gram → 0.6 KG. Cost is for the quantity actually used.
                       const displayUnit = m?.purchase_unit ?? ing.unit_used;
@@ -326,7 +325,8 @@ export function RecipeDetailPage() {
                         m && canConvert(ing.unit_used, m.purchase_unit)
                           ? round3(ing.quantity_used * scale * getConversionFactor(ing.unit_used, m.purchase_unit))
                           : round3(ing.quantity_used * scale);
-                      const cost = ok ? round2(calculateIngredientCost(m!.cost_per_base_unit!, ing.quantity_used, ing.unit_used, m!.base_unit) * scale) : null;
+                      // Persisted (yield-adjusted) line cost — single source of truth (§9).
+                      const cost = ing.calculated_cost == null ? null : round2(ing.calculated_cost * scale);
                       return (
                         <TableRow key={ing.id}>
                           <TableCell className="font-medium">{m?.ingredient_name ?? "—"}</TableCell>

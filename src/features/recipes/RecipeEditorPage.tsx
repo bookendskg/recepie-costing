@@ -27,10 +27,12 @@ import {
 import { recipeHeaderSchema, type RecipeHeaderValues } from "@/lib/validation/schemas";
 import { compatibleUnits, canConvert } from "@/lib/units";
 import { calculateIngredientCost, prepUnitCostFrom, round2 } from "@/lib/costing";
+import { activeYield, effectiveCostPerBaseUnit } from "@/lib/yield";
 import { formatINR } from "@/lib/utils";
 import { toast } from "@/components/ui/use-toast";
 import { BRANDS, type RawMaterial } from "@/lib/data/types";
 import { useMaterials } from "@/features/raw-materials/hooks";
+import { useYields } from "@/features/yield/hooks";
 import { useFoodCostPct, useRecipeCategories } from "@/features/settings/hooks";
 import { useRecipeCosting, type EditorLine } from "@/features/costing/useRecipeCosting";
 import { CostSummary } from "@/features/costing/CostSummary";
@@ -53,6 +55,7 @@ export function RecipeEditorPage() {
   const newPrep = !!(location.state as { isPrep?: boolean } | null)?.isPrep;
 
   const { data: materials = [] } = useMaterials();
+  const { data: yields = [] } = useYields();
   const { data: allRecipes = [] } = useRecipes();
   const { data: categories = [] } = useRecipeCategories();
   const { data: foodCostPct = 30 } = useFoodCostPct();
@@ -117,6 +120,7 @@ export function RecipeEditorPage() {
           component_type: i.component_type,
           quantity_used: i.quantity_used,
           unit_used: i.unit_used,
+          wastage_override_pct: i.wastage_override_pct ?? null,
         })),
       );
     } else if (!isEdit) {
@@ -132,6 +136,7 @@ export function RecipeEditorPage() {
       component_type: l.component_type,
       quantity_used: l.quantity_used,
       unit_used: l.unit_used,
+      wastage_override_pct: l.wastage_override_pct,
     })),
     materialsById,
     prepsById,
@@ -139,6 +144,7 @@ export function RecipeEditorPage() {
     foodCostPct,
     watch("wastage_pct") || 0,
     watch("packaging_cost") || 0,
+    yields,
   );
 
   const addLine = () =>
@@ -176,6 +182,7 @@ export function RecipeEditorPage() {
       component_type: l.component_type ?? "material",
       quantity_used: l.quantity_used,
       unit_used: l.unit_used,
+      wastage_override_pct: l.wastage_override_pct ?? null,
     }));
   };
 
@@ -392,20 +399,24 @@ export function RecipeEditorPage() {
                   const prep = isPrep ? prepsById.get(line.ingredient_id) ?? null : null;
                   const material = !isPrep ? materialsById.get(line.ingredient_id) ?? null : null;
                   const units = prep ? [prep.yield_unit] : material ? compatibleUnits(material.base_unit) : [];
+                  const yieldRec = material ? activeYield(yields, material.id) : null;
                   let lineCost: number | null = null;
                   if (prep && line.quantity_used > 0) {
                     const perUnit = prepUnitCostFrom(prep.total_cost ?? 0, prep.yield_quantity, prep.wastage_pct ?? 0);
                     lineCost = round2(perUnit * line.quantity_used);
-                  } else if (
-                    material &&
-                    material.cost_per_base_unit !== null &&
-                    line.quantity_used > 0 &&
-                    canConvert(line.unit_used, material.base_unit)
-                  ) {
-                    lineCost = calculateIngredientCost(material.cost_per_base_unit, line.quantity_used, line.unit_used, material.base_unit);
+                  } else if (material && line.quantity_used > 0 && canConvert(line.unit_used, material.base_unit)) {
+                    // §9/§10: yield-adjusted rate (with any recipe-specific wastage override).
+                    const rate = effectiveCostPerBaseUnit(material.cost_per_base_unit, yieldRec, line.wastage_override_pct);
+                    if (rate !== null) {
+                      lineCost = calculateIngredientCost(rate, line.quantity_used, line.unit_used, material.base_unit);
+                    }
                   }
+                  const stdWastage = yieldRec?.wastage_percentage ?? 0;
+                  const effWastage = line.wastage_override_pct ?? stdWastage;
+                  const hasOverride = line.wastage_override_pct != null;
                   return (
-                    <div key={line.key} className="grid grid-cols-12 items-center gap-2">
+                    <div key={line.key} className="space-y-1.5 border-b border-dashed pb-2 last:border-0">
+                    <div className="grid grid-cols-12 items-center gap-2">
                       <div className="col-span-12 sm:col-span-5">
                         <IngredientPicker
                           materials={activeMaterials}
@@ -461,6 +472,35 @@ export function RecipeEditorPage() {
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
+                    </div>
+                    {/* §10: recipe-specific wastage override (only for ingredients with yield data) */}
+                    {yieldRec && (
+                      <div className="flex flex-wrap items-center gap-2 pl-1 text-xs text-muted-foreground">
+                        <span>Wastage</span>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={effWastage}
+                          onChange={(e) =>
+                            patchLine(line.key, {
+                              wastage_override_pct: e.target.value === "" ? null : Number(e.target.value),
+                            })
+                          }
+                          className="h-7 w-20"
+                          aria-label="Recipe-specific wastage %"
+                        />
+                        <span>% · standard {stdWastage}%</span>
+                        {hasOverride && (
+                          <button
+                            type="button"
+                            onClick={() => patchLine(line.key, { wastage_override_pct: null })}
+                            className="font-medium text-primary hover:underline"
+                          >
+                            Reset to standard yield
+                          </button>
+                        )}
+                      </div>
+                    )}
                     </div>
                   );
                 })}

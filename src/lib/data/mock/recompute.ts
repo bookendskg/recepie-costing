@@ -4,6 +4,7 @@
 
 import { calculateIngredientCost, prepUnitCostFrom, round2 } from "../../costing";
 import { canConvert, getConversionFactor } from "../../units";
+import { activeYield, effectiveCostPerBaseUnit } from "../../yield";
 import type {
   AuditAction,
   AuditEntityType,
@@ -23,7 +24,10 @@ export function prepUnitCost(recipe: Recipe): number {
 }
 
 /** Cost of one recipe line — a raw material or a sub-recipe (prep). */
-function lineCost(db: MockDb, line: { ingredient_id: string; component_type: string; quantity_used: number; unit_used: string }): number | null {
+function lineCost(
+  db: MockDb,
+  line: { ingredient_id: string; component_type: string; quantity_used: number; unit_used: string; wastage_override_pct?: number | null },
+): number | null {
   if (line.component_type === "recipe") {
     const sub = db.recipes.find((r) => r.id === line.ingredient_id);
     // Unconvertible unit → unknown cost (never silently assume factor 1).
@@ -33,8 +37,12 @@ function lineCost(db: MockDb, line: { ingredient_id: string; component_type: str
   }
   const m = findMaterial(db, line.ingredient_id);
   // Guard the unit pair so an invalid conversion can never throw mid-recompute.
-  if (!m || m.cost_per_base_unit === null || !canConvert(line.unit_used, m.base_unit)) return null;
-  return calculateIngredientCost(m.cost_per_base_unit, line.quantity_used, line.unit_used, m.base_unit);
+  if (!m || !canConvert(line.unit_used, m.base_unit)) return null;
+  // §9: use the yield-adjusted rate when yield data exists, else the purchase rate.
+  const yieldRec = activeYield(db.ingredient_yields, m.id);
+  const rate = effectiveCostPerBaseUnit(m.cost_per_base_unit, yieldRec, line.wastage_override_pct);
+  if (rate === null) return null; // no price and no yield
+  return calculateIngredientCost(rate, line.quantity_used, line.unit_used, m.base_unit);
 }
 
 /**

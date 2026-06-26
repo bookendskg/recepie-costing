@@ -12,6 +12,9 @@ export type { MaterialInput } from "./mock/materials";
 export { yieldsRepo } from "./mock/yields";
 export type { YieldInput } from "./mock/yields";
 
+export { wastageRepo, applicableUnitCost } from "./mock/wastage";
+export type { WastageInput } from "./mock/wastage";
+
 export { recipesRepo } from "./mock/recipes";
 export type {
   RecipeHeaderInput,

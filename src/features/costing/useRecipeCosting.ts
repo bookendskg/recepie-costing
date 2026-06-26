@@ -1,13 +1,16 @@
 import { useMemo } from "react";
 import { calculateIngredientCost, prepUnitCostFrom, round2, type RecipeCostingResult } from "@/lib/costing";
 import { canConvert, getConversionFactor } from "@/lib/units";
-import type { RawMaterial, Recipe } from "@/lib/data/types";
+import { activeYield, effectiveCostPerBaseUnit } from "@/lib/yield";
+import type { IngredientYield, RawMaterial, Recipe } from "@/lib/data/types";
 
 export interface EditorLine {
   ingredient_id: string;
   component_type?: "material" | "recipe";
   quantity_used: number;
   unit_used: string;
+  /** Recipe-specific wastage % override (§10); null → standard yield. */
+  wastage_override_pct?: number | null;
 }
 
 export interface CostedLine extends EditorLine {
@@ -46,6 +49,7 @@ export function useRecipeCosting(
   foodCostPct: number,
   wastagePct = 0,
   packagingCost = 0,
+  yields: IngredientYield[] = [],
 ): RecipeCostingView {
   return useMemo(() => {
     const costed: CostedLine[] = lines.map((l) => {
@@ -61,11 +65,14 @@ export function useRecipeCosting(
         return { ...l, material: null, subRecipe, cost, missingPrice: false, unitMismatch: false };
       }
       const material = materialsById.get(l.ingredient_id) ?? null;
-      const missingPrice = !!material && material.cost_per_base_unit === null;
+      const yieldRec = material ? activeYield(yields, material.id) : null;
+      // §9: yield-adjusted rate when yield exists, else the purchase rate.
+      const rate = material ? effectiveCostPerBaseUnit(material.cost_per_base_unit, yieldRec, l.wastage_override_pct) : null;
+      const missingPrice = !!material && rate === null;
       const unitMismatch = !!material && !canConvert(l.unit_used, material.base_unit);
       const cost =
-        material && material.cost_per_base_unit !== null && !unitMismatch && l.quantity_used > 0
-          ? calculateIngredientCost(material.cost_per_base_unit, l.quantity_used, l.unit_used, material.base_unit)
+        material && rate !== null && !unitMismatch && l.quantity_used > 0
+          ? calculateIngredientCost(rate, l.quantity_used, l.unit_used, material.base_unit)
           : null;
       return { ...l, material, subRecipe: null, cost, missingPrice, unitMismatch };
     });
@@ -92,5 +99,5 @@ export function useRecipeCosting(
       packagingCost,
       fullCostPerPortion: round2(rawFullCpp),
     };
-  }, [lines, materialsById, prepsById, servingSize, foodCostPct, wastagePct, packagingCost]);
+  }, [lines, materialsById, prepsById, servingSize, foodCostPct, wastagePct, packagingCost, yields]);
 }

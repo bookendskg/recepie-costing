@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { PiggyBank, UtensilsCrossed, AlertTriangle, Coins, MoreVertical } from "lucide-react";
+import { PiggyBank, UtensilsCrossed, AlertTriangle, Coins, MoreVertical, Sprout, Trash2, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -10,12 +10,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn, formatINR } from "@/lib/utils";
-import { BRANDS } from "@/lib/data/types";
+import { cn, formatINR, formatDate } from "@/lib/utils";
+import { BRANDS, outletById } from "@/lib/data/types";
 import type { BrandSelection } from "./BrandFilter";
 import { useRecipes } from "@/features/recipes/hooks";
 import { useFoodCostPct, useAllSettings } from "@/features/settings/hooks";
 import { useAllRecipeIngredients } from "@/features/reports/hooks";
+import { useYields } from "@/features/yield/hooks";
+import { useWastage } from "@/features/wastage/hooks";
 import {
   foodCostPctOf,
   menuPriceOf,
@@ -40,8 +42,35 @@ export function OperationsDashboard({ brand }: { brand: BrandSelection }) {
   const { data: foodCostPct = 30 } = useFoodCostPct();
   const { data: settings = [] } = useAllSettings();
   const ingredients = useAllRecipeIngredients();
+  const { data: yields = [] } = useYields();
+  const { data: wastage = [] } = useWastage();
 
   const criticalPct = Number(settings.find((s) => s.key === "margin_alert_pct")?.value ?? 35);
+
+  // §16 Yield Management summary.
+  const yieldStats = useMemo(() => {
+    const n = yields.length;
+    const avgYield = n ? yields.reduce((s, y) => s + y.yield_percentage, 0) / n : 0;
+    const estWaste = yields.reduce((s, y) => s + y.wastage_quantity * y.original_unit_cost, 0);
+    return { n, avgYield, estWaste };
+  }, [yields]);
+
+  // §16 Wastage Management summary (scoped to the selected brand).
+  const wastageStats = useMemo(() => {
+    const month = new Date().toISOString().slice(0, 7);
+    const scoped = brand === "all" ? wastage : wastage.filter((w) => w.brand === brand);
+    const monthCost = scoped.filter((w) => w.wastage_date.slice(0, 7) === month).reduce((s, w) => s + w.total_cost, 0);
+    const total = scoped.reduce((s, w) => s + w.total_cost, 0);
+    const byOutlet = new Map<string, number>();
+    scoped.forEach((w) => byOutlet.set(w.outlet_id, (byOutlet.get(w.outlet_id) ?? 0) + w.total_cost));
+    const topOutlet = [...byOutlet.entries()].sort((a, b) => b[1] - a[1])[0];
+    return {
+      monthCost,
+      total,
+      topOutlet: topOutlet ? outletById(topOutlet[0])?.name ?? "—" : "—",
+      recent: scoped.slice(0, 5),
+    };
+  }, [wastage, brand]);
 
   // Real menu recipes for the selected brand (deduped by id; preps excluded).
   const items = useMemo(() => {
@@ -191,7 +220,66 @@ export function OperationsDashboard({ brand }: { brand: BrandSelection }) {
           </div>
         </Card>
       </div>
+
+      {/* §16 Yield & Wastage summaries */}
+      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        <button onClick={() => navigate("/yield")} className="text-left">
+          <Card className="h-full p-5 transition-shadow hover:shadow-md">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="flex items-center gap-2 text-sm font-semibold"><Sprout className={cn("h-4 w-4", t.accentText)} /> Yield Management</p>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <Mini label="Avg Yield" value={`${yieldStats.avgYield.toFixed(1)}%`} />
+              <Mini label="Ingredients" value={String(yieldStats.n)} />
+              <Mini label="Est. Wastage Cost" value={formatINR(yieldStats.estWaste)} wide />
+            </div>
+          </Card>
+        </button>
+
+        <button onClick={() => navigate("/wastage")} className="text-left">
+          <Card className="h-full p-5 transition-shadow hover:shadow-md">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="flex items-center gap-2 text-sm font-semibold"><Trash2 className={cn("h-4 w-4", t.accentText)} /> Wastage — {brandLabel}</p>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <Mini label="This Month" value={formatINR(wastageStats.monthCost)} />
+              <Mini label="All-Time" value={formatINR(wastageStats.total)} />
+              <Mini label="Top Outlet" value={wastageStats.topOutlet} wide />
+            </div>
+          </Card>
+        </button>
+
+        <Card className="p-5">
+          <p className="mb-3 text-sm font-semibold">Recent Wastage Entries</p>
+          {wastageStats.recent.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No wastage recorded.</p>
+          ) : (
+            <div className="space-y-2">
+              {wastageStats.recent.map((w) => (
+                <div key={w.id} className="flex items-center justify-between gap-2 border-b border-dashed pb-1.5 text-sm last:border-0">
+                  <div className="min-w-0">
+                    <p className="truncate">{outletById(w.outlet_id)?.name ?? w.outlet_id}</p>
+                    <p className="text-[11px] text-muted-foreground">{w.wastage_type} · {formatDate(w.wastage_date)}</p>
+                  </div>
+                  <span className="shrink-0 font-mono font-semibold">{formatINR(w.total_cost)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
     </>
+  );
+}
+
+function Mini({ label, value, wide }: { label: string; value: string; wide?: boolean }) {
+  return (
+    <div className={cn("rounded-md bg-muted/50 p-2.5", wide && "col-span-2")}>
+      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-0.5 truncate text-base font-bold">{value}</p>
+    </div>
   );
 }
 

@@ -21,6 +21,77 @@ export const BRANDS: { value: Brand; label: string }[] = [
 export type MaterialStatus = "active" | "inactive";
 export type ViewType = "capiche" | "aiko";
 
+/** A restaurant outlet under a brand (§12). Centralized constants — never store
+ *  ad-hoc spellings of the same outlet. */
+export interface Outlet {
+  id: string;
+  brand: Brand;
+  name: string;
+}
+export const OUTLETS: Outlet[] = [
+  { id: "capiche-piplod", brand: "capiche", name: "Capiche Piplod" },
+  { id: "capiche-vesu", brand: "capiche", name: "Capiche Vesu" },
+  { id: "capiche-ambli", brand: "capiche", name: "Capiche Ambli" },
+  { id: "capiche-university", brand: "capiche", name: "Capiche University" },
+  { id: "aiko-pal", brand: "aiko", name: "Aiko Pal" },
+  { id: "aiko-ambli", brand: "aiko", name: "Aiko Ambli" },
+];
+export const outletById = (id: string): Outlet | undefined => OUTLETS.find((o) => o.id === id);
+export const outletsForBrand = (brand: Brand): Outlet[] => OUTLETS.filter((o) => o.brand === brand);
+
+/** Operational wastage taxonomy (§13). */
+export const WASTAGE_TYPES = [
+  "Raw Material Wastage",
+  "Preparation Wastage",
+  "Cooking Wastage",
+  "Spoilage",
+  "Expired Stock",
+  "Overproduction",
+  "Returned Food",
+  "Incorrect Preparation",
+  "Damaged Stock",
+  "Quality Rejection",
+  "Other",
+] as const;
+export type WastageType = (typeof WASTAGE_TYPES)[number];
+
+export const DEPARTMENTS = [
+  "Kitchen",
+  "Bar",
+  "Bakery",
+  "Store",
+  "Service",
+  "Central Kitchen",
+  "Other",
+] as const;
+export type Department = (typeof DEPARTMENTS)[number];
+
+/** A recorded operational wastage event at an outlet (§11–§14). Separate from
+ *  the Yield Management master data. */
+export interface WastageEntry {
+  id: string;
+  wastage_date: string;
+  brand: Brand;
+  outlet_id: string;
+  wastage_type: WastageType;
+  /** Whether a raw ingredient or a finished recipe was wasted. */
+  item_type: "ingredient" | "recipe";
+  ingredient_id: string | null;
+  recipe_id: string | null;
+  quantity: number;
+  unit: string;
+  unit_cost: number;
+  total_cost: number;
+  reason: string | null;
+  department: Department;
+  shift: string | null;
+  entered_by: string | null;
+  approved_by: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -111,6 +182,8 @@ export interface RecipeIngredient {
   unit_used: string;
   calculated_cost: number | null;
   sort_order: number;
+  /** Recipe-specific wastage % override (§10). Null → use the ingredient's standard yield. */
+  wastage_override_pct?: number | null;
 }
 
 export interface RecipeCostHistory {

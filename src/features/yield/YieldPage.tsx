@@ -55,7 +55,7 @@ type SortKey = "name" | "wastage" | "yield" | "cost";
 
 export function YieldPage() {
   const user = useSession((s) => s.user)!;
-  const canEdit = can(user.role, "material.edit");
+  const canEdit = can(user.role, "yield.manage");
   const { data: yields = [], isLoading } = useYields();
   const { data: materials = [] } = useMaterials();
   const deleteMut = useDeleteYield();

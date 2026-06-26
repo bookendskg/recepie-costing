@@ -13,6 +13,10 @@ export type Capability =
   // raw materials
   | "material.view"
   | "material.edit"
+  // yield management (R&D)
+  | "yield.manage"
+  // operational wastage
+  | "wastage.create"
   // recipes
   | "recipe.create"
   | "recipe.editAll"
@@ -36,6 +40,8 @@ const MATRIX: Record<Role, Capability[]> = {
     "user.manage",
     "material.view",
     "material.edit",
+    "yield.manage",
+    "wastage.create",
     "recipe.create",
     "recipe.editAll",
     "recipe.delete",
@@ -51,6 +57,9 @@ const MATRIX: Record<Role, Capability[]> = {
   editor: [
     // Ingredients are read-only for editors — only an admin changes them.
     "material.view",
+    // R&D manages yield data and can record wastage.
+    "yield.manage",
+    "wastage.create",
     "recipe.create",
     "recipe.duplicate",
     "recipe.submit",
@@ -59,15 +68,16 @@ const MATRIX: Record<Role, Capability[]> = {
     "report.excel",
   ],
   // Head Chef: views everything (recipes, sub-recipes, costs) but can't change
-  // prices/recipes; can grant sharing permissions to others.
+  // prices/recipes; can grant sharing permissions and record wastage.
   head_chef: [
     "material.view",
+    "wastage.create",
     "recipe.viewAll",
     "viewer.assign",
     "report.excel",
   ],
-  // Chef: view-only.
-  chef: ["material.view", "recipe.viewAll"],
+  // Chef: view-only, but can record operational wastage for their outlet.
+  chef: ["material.view", "wastage.create", "recipe.viewAll"],
   viewer: [],
 };
 
