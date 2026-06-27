@@ -1,13 +1,10 @@
-import { useSession } from "@/lib/auth/session";
-import { AdminDashboard } from "./AdminDashboard";
-import { EditorDashboard } from "./EditorDashboard";
-import { ViewerDashboard } from "./ViewerDashboard";
+import { MasterCostingDashboard } from "./MasterCostingDashboard";
+import { useDashboardBrand } from "./brandTheme";
 
+// Every role sees the same brand-themed Master Costing dashboard. The brand
+// toggle in the header re-scopes it: BOOKENDS = both restaurants, Capiche =
+// Capiche only, Aiko = Aiko only.
 export function DashboardPage() {
-  const user = useSession((s) => s.user);
-  if (!user) return null;
-  if (user.role === "editor") return <EditorDashboard />;
-  if (user.role === "viewer") return <ViewerDashboard />;
-  // Admin, Head Chef, and Chef all see the full Kitchen Operations overview.
-  return <AdminDashboard />;
+  const brand = useDashboardBrand((s) => s.brand);
+  return <MasterCostingDashboard brand={brand} />;
 }
