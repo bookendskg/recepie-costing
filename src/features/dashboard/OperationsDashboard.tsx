@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { PiggyBank, UtensilsCrossed, AlertTriangle, Coins, MoreVertical, Sprout, Trash2, ChevronRight } from "lucide-react";
+import { PiggyBank, UtensilsCrossed, AlertTriangle, Coins, MoreVertical, Sprout, Trash2, ChevronRight, Store, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -18,6 +18,7 @@ import { useFoodCostPct, useAllSettings } from "@/features/settings/hooks";
 import { useAllRecipeIngredients } from "@/features/reports/hooks";
 import { useYields } from "@/features/yield/hooks";
 import { useWastage } from "@/features/wastage/hooks";
+import { useMaterials } from "@/features/raw-materials/hooks";
 import {
   foodCostPctOf,
   menuPriceOf,
@@ -44,8 +45,38 @@ export function OperationsDashboard({ brand }: { brand: BrandSelection }) {
   const ingredients = useAllRecipeIngredients();
   const { data: yields = [] } = useYields();
   const { data: wastage = [] } = useWastage();
+  const { data: materials = [] } = useMaterials();
 
   const criticalPct = Number(settings.find((s) => s.key === "margin_alert_pct")?.value ?? 35);
+
+  // §16 Operational insights: missing prices, high-wastage ingredients, recent updates, outlet comparison.
+  const insights = useMemo(() => {
+    const matById = new Map(materials.map((m) => [m.id, m.ingredient_name]));
+    const scoped = brand === "all" ? wastage : wastage.filter((w) => w.brand === brand);
+
+    const missingPrices = materials.filter((m) => m.status === "active" && m.purchase_price == null);
+
+    const wByIng = new Map<string, number>();
+    scoped.filter((w) => w.item_type === "ingredient").forEach((w) => {
+      const k = matById.get(w.ingredient_id ?? "") ?? "—";
+      wByIng.set(k, (wByIng.get(k) ?? 0) + w.total_cost);
+    });
+    const highWastage = [...wByIng.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+    const wByOutlet = new Map<string, number>();
+    scoped.forEach((w) => wByOutlet.set(w.outlet_id, (wByOutlet.get(w.outlet_id) ?? 0) + w.total_cost));
+    const maxOutlet = Math.max(1, ...[...wByOutlet.values()]);
+    const outletCompare = [...wByOutlet.entries()]
+      .map(([id, cost]) => ({ name: outletById(id)?.name ?? id, cost, pct: Math.round((cost / maxOutlet) * 100) }))
+      .sort((a, b) => b.cost - a.cost);
+
+    const recentRecipes = [...recipes]
+      .filter((r) => !r.is_prep && (brand === "all" || r.brand === brand))
+      .sort((a, b) => (b.updated_at ?? "").localeCompare(a.updated_at ?? ""))
+      .slice(0, 5);
+
+    return { missingPrices, highWastage, outletCompare, recentRecipes };
+  }, [materials, wastage, recipes, brand]);
 
   // §16 Yield Management summary.
   const yieldStats = useMemo(() => {
@@ -265,6 +296,81 @@ export function OperationsDashboard({ brand }: { brand: BrandSelection }) {
                   </div>
                   <span className="shrink-0 font-mono font-semibold">{formatINR(w.total_cost)}</span>
                 </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* §16 Operational insights */}
+      <div className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+        <Card className="p-5">
+          <p className="mb-3 flex items-center gap-2 text-sm font-semibold"><AlertTriangle className="h-4 w-4 text-amber-500" /> Missing Ingredient Prices</p>
+          {insights.missingPrices.length === 0 ? (
+            <p className="text-sm text-muted-foreground">All active ingredients are priced. ✓</p>
+          ) : (
+            <>
+              <p className="mb-2 text-2xl font-bold">{insights.missingPrices.length}</p>
+              <div className="space-y-1">
+                {insights.missingPrices.slice(0, 4).map((m) => (
+                  <button key={m.id} onClick={() => navigate("/materials")} className="block w-full truncate text-left text-sm text-muted-foreground hover:text-foreground hover:underline">
+                    {m.ingredient_name}
+                  </button>
+                ))}
+                {insights.missingPrices.length > 4 && <p className="text-xs text-muted-foreground">+{insights.missingPrices.length - 4} more</p>}
+              </div>
+            </>
+          )}
+        </Card>
+
+        <Card className="p-5">
+          <p className="mb-3 flex items-center gap-2 text-sm font-semibold"><Trash2 className={cn("h-4 w-4", t.accentText)} /> High-Wastage Ingredients</p>
+          {insights.highWastage.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No ingredient wastage recorded.</p>
+          ) : (
+            <div className="space-y-2">
+              {insights.highWastage.map(([name, cost]) => (
+                <div key={name} className="flex items-center justify-between gap-2 text-sm">
+                  <span className="min-w-0 truncate">{name}</span>
+                  <span className="shrink-0 font-mono font-semibold">{formatINR(cost)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        <Card className="p-5">
+          <p className="mb-3 flex items-center gap-2 text-sm font-semibold"><Store className={cn("h-4 w-4", t.accentText)} /> Outlet Comparison</p>
+          {insights.outletCompare.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No wastage recorded.</p>
+          ) : (
+            <div className="space-y-2.5">
+              {insights.outletCompare.map((o) => (
+                <div key={o.name}>
+                  <div className="mb-1 flex items-center justify-between text-xs">
+                    <span className="truncate">{o.name}</span>
+                    <span className="font-semibold">{formatINR(o.cost)}</span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                    <div className={cn("h-full rounded-full", t.bar)} style={{ width: `${o.pct}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        <Card className="p-5">
+          <p className="mb-3 flex items-center gap-2 text-sm font-semibold"><Clock className="h-4 w-4 text-muted-foreground" /> Recent Recipe Updates</p>
+          {insights.recentRecipes.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No recipes yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {insights.recentRecipes.map((r) => (
+                <button key={r.id} onClick={() => navigate(`/recipes/${r.id}`)} className="flex w-full items-center justify-between gap-2 text-left text-sm hover:underline">
+                  <span className="min-w-0 truncate">{r.recipe_name}</span>
+                  <span className="shrink-0 text-[11px] text-muted-foreground">{formatDate(r.updated_at)}</span>
+                </button>
               ))}
             </div>
           )}

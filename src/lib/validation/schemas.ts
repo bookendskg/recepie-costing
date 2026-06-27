@@ -162,6 +162,7 @@ export const wastageSchema = z
     reason: z.string().optional().or(z.literal("")),
     department: z.enum(DEPARTMENTS),
     shift: z.string().optional().or(z.literal("")),
+    approved_by: z.string().optional().or(z.literal("")),
     notes: z.string().optional().or(z.literal("")),
   })
   .refine((v) => (v.item_type === "ingredient" ? !!v.ingredient_id : !!v.recipe_id), {

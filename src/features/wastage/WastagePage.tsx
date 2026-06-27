@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
-import { MoreVertical, Plus, Trash2, Trash, CalendarDays, Coins, Store } from "lucide-react";
+import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { MoreVertical, Plus, Trash2, Trash, CalendarDays, Coins, Store, Percent, ChefHat } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { TableSkeleton } from "@/components/TableSkeleton";
@@ -84,38 +84,59 @@ export function WastagePage() {
   const current = Math.min(page, pageCount);
   const pageItems = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
-  // Summary (§14)
+  // Summary + reports (§14)
   const stats = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
     const month = today.slice(0, 7);
     const todayCost = entries.filter((w) => w.wastage_date === today).reduce((s, w) => s + w.total_cost, 0);
     const monthCost = entries.filter((w) => w.wastage_date.slice(0, 7) === month).reduce((s, w) => s + w.total_cost, 0);
-    const totalQty = entries.reduce((s, w) => s + w.quantity, 0);
+    const totalCost = entries.reduce((s, w) => s + w.total_cost, 0);
     const byOutletMap = new Map<string, number>();
     const byTypeMap = new Map<string, number>();
-    const byItemMap = new Map<string, number>();
+    const byBrandMap = new Map<string, number>();
+    const byReasonMap = new Map<string, number>();
+    const byDayMap = new Map<string, number>();
+    const recipeMap = new Map<string, number>();
+    const ingredientMap = new Map<string, number>();
     for (const w of entries) {
       byOutletMap.set(w.outlet_id, (byOutletMap.get(w.outlet_id) ?? 0) + w.total_cost);
       byTypeMap.set(w.wastage_type, (byTypeMap.get(w.wastage_type) ?? 0) + w.total_cost);
+      byBrandMap.set(w.brand, (byBrandMap.get(w.brand) ?? 0) + w.total_cost);
+      const reason = w.reason || "Unspecified";
+      byReasonMap.set(reason, (byReasonMap.get(reason) ?? 0) + w.total_cost);
+      byDayMap.set(w.wastage_date, (byDayMap.get(w.wastage_date) ?? 0) + w.total_cost);
       const key = itemName(w);
-      byItemMap.set(key, (byItemMap.get(key) ?? 0) + w.total_cost);
+      (w.item_type === "recipe" ? recipeMap : ingredientMap).set(key, ((w.item_type === "recipe" ? recipeMap : ingredientMap).get(key) ?? 0) + w.total_cost);
     }
     const top = (m: Map<string, number>) => [...m.entries()].sort((a, b) => b[1] - a[1])[0];
-    const topOutlet = top(byOutletMap);
-    const topItem = top(byItemMap);
-    const byOutlet = OUTLETS.map((o) => ({ name: o.name.replace(/^(Capiche|Aiko) /, ""), cost: Math.round(byOutletMap.get(o.id) ?? 0) }));
-    const byType = [...byTypeMap.entries()].map(([name, cost]) => ({ name: name.replace(" Wastage", ""), cost: Math.round(cost) })).sort((a, b) => b.cost - a.cost).slice(0, 6);
+    const toData = (m: Map<string, number>, fmt: (k: string) => string = (k) => k) =>
+      [...m.entries()].map(([name, cost]) => ({ name: fmt(name), cost: Math.round(cost) })).sort((a, b) => b.cost - a.cost).slice(0, 6);
+    // Daily trend — last 30 days.
+    const daily: { date: string; cost: number }[] = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86_400_000).toISOString().slice(0, 10);
+      daily.push({ date: d.slice(5), cost: Math.round(byDayMap.get(d) ?? 0) });
+    }
+    const inventoryValue = materials.filter((m) => m.status === "active").reduce((s, m) => s + (m.purchase_price ?? 0), 0);
+    const topItem = top(ingredientMap);
+    const topRecipe = top(recipeMap);
     return {
       todayCost,
       monthCost,
-      totalQty,
-      topOutlet: topOutlet ? outletById(topOutlet[0])?.name ?? "—" : "—",
+      totalCost,
+      topOutlet: top(byOutletMap) ? outletById(top(byOutletMap)[0])?.name ?? "—" : "—",
       topItem: topItem ? topItem[0] : "—",
-      byOutlet,
-      byType,
+      topRecipe: topRecipe ? topRecipe[0] : "—",
+      pctOfInventory: inventoryValue > 0 ? (totalCost / inventoryValue) * 100 : 0,
+      byOutlet: OUTLETS.map((o) => ({ name: o.name.replace(/^(Capiche|Aiko) /, ""), cost: Math.round(byOutletMap.get(o.id) ?? 0) })),
+      byType: toData(byTypeMap, (k) => k.replace(" Wastage", "")),
+      byBrand: BRANDS.map((b) => ({ name: b.label, cost: Math.round(byBrandMap.get(b.value) ?? 0) })),
+      byReason: toData(byReasonMap),
+      topItems: toData(ingredientMap),
+      daily,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries, matById, recById]);
+  }, [entries, materials, matById, recById]);
 
   const resetPage = () => setPage(1);
 
@@ -133,39 +154,37 @@ export function WastagePage() {
         }
       />
 
-      {/* Summary cards */}
-      <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      {/* Summary cards (§14) */}
+      <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat icon={<CalendarDays className="h-4 w-4" />} label="Today's Wastage" value={formatINR(stats.todayCost)} />
         <Stat icon={<Coins className="h-4 w-4" />} label="This Month" value={formatINR(stats.monthCost)} />
-        <Stat icon={<Trash className="h-4 w-4" />} label="Entries" value={String(entries.length)} />
+        <Stat icon={<Coins className="h-4 w-4" />} label="All-Time Cost" value={formatINR(stats.totalCost)} />
+        <Stat icon={<Percent className="h-4 w-4 text-amber-500" />} label="Vs Inventory Value" value={`${stats.pctOfInventory.toFixed(1)}%`} />
         <Stat icon={<Store className="h-4 w-4" />} label="Top Outlet" value={stats.topOutlet} small />
-        <Stat icon={<Trash className="h-4 w-4 text-amber-500" />} label="Top Item" value={stats.topItem} small />
+        <Stat icon={<Trash className="h-4 w-4 text-amber-500" />} label="Top Ingredient" value={stats.topItem} small />
+        <Stat icon={<ChefHat className="h-4 w-4" />} label="Top Recipe" value={stats.topRecipe} small />
+        <Stat icon={<Trash className="h-4 w-4" />} label="Entries" value={String(entries.length)} />
       </div>
 
-      {/* Breakdown charts */}
-      <div className="mb-4 grid gap-4 lg:grid-cols-2">
-        <Card className="p-4">
-          <p className="mb-3 text-sm font-semibold">Wastage by Outlet</p>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={stats.byOutlet} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={40} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: number) => formatINR(v)} cursor={{ fill: "hsl(var(--muted))" }} />
-              <Bar dataKey="cost" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-        <Card className="p-4">
-          <p className="mb-3 text-sm font-semibold">Wastage by Type</p>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={stats.byType} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={40} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: number) => formatINR(v)} cursor={{ fill: "hsl(var(--muted))" }} />
-              <Bar dataKey="cost" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
+      {/* Reports (§14) */}
+      <Card className="mb-4 p-4">
+        <p className="mb-3 text-sm font-semibold">Daily Wastage Trend (last 30 days)</p>
+        <ResponsiveContainer width="100%" height={200}>
+          <LineChart data={stats.daily} margin={{ top: 4, right: 12, left: -12, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+            <XAxis dataKey="date" tick={{ fontSize: 10 }} interval={4} />
+            <YAxis tick={{ fontSize: 11 }} />
+            <Tooltip formatter={(v: number) => formatINR(v)} labelFormatter={(l) => `Day ${l}`} />
+            <Line type="monotone" dataKey="cost" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      </Card>
+      <div className="mb-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <Breakdown title="By Outlet" data={stats.byOutlet} />
+        <Breakdown title="By Wastage Type" data={stats.byType} />
+        <Breakdown title="By Brand" data={stats.byBrand} />
+        <Breakdown title="By Reason" data={stats.byReason} />
+        <Breakdown title="Top Wasted Ingredients" data={stats.topItems} />
       </div>
 
       {/* Filters */}
@@ -286,6 +305,27 @@ function Stat({ icon, label, value, small }: { icon: React.ReactNode; label: str
     <Card className="p-4">
       <div className="mb-1 flex items-center gap-2 text-sm text-muted-foreground">{icon}{label}</div>
       <div className={small ? "truncate text-base font-semibold" : "text-2xl font-bold"}>{value}</div>
+    </Card>
+  );
+}
+
+function Breakdown({ title, data }: { title: string; data: { name: string; cost: number }[] }) {
+  const hasData = data.some((d) => d.cost > 0);
+  return (
+    <Card className="p-4">
+      <p className="mb-3 text-sm font-semibold">{title}</p>
+      {!hasData ? (
+        <p className="flex h-[180px] items-center justify-center text-sm text-muted-foreground">No data.</p>
+      ) : (
+        <ResponsiveContainer width="100%" height={180}>
+          <BarChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+            <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-15} textAnchor="end" height={42} />
+            <YAxis tick={{ fontSize: 11 }} />
+            <Tooltip formatter={(v: number) => formatINR(v)} cursor={{ fill: "hsl(var(--muted))" }} />
+            <Bar dataKey="cost" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      )}
     </Card>
   );
 }

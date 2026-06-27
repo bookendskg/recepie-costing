@@ -76,6 +76,7 @@ export function WastageForm({
       reason: "",
       department: "Kitchen",
       shift: "",
+      approved_by: "",
       notes: "",
     },
   });
@@ -99,6 +100,7 @@ export function WastageForm({
             reason: record.reason ?? "",
             department: record.department,
             shift: record.shift ?? "",
+            approved_by: record.approved_by ?? "",
             notes: record.notes ?? "",
           }
         : {
@@ -115,6 +117,7 @@ export function WastageForm({
             reason: "",
             department: "Kitchen",
             shift: "",
+            approved_by: "",
             notes: "",
           },
     );
@@ -167,6 +170,7 @@ export function WastageForm({
       reason: values.reason || null,
       department: values.department,
       shift: values.shift || null,
+      approved_by: values.approved_by || null,
       notes: values.notes || null,
     };
     try {
@@ -282,9 +286,14 @@ export function WastageForm({
             </Field>
           </div>
 
-          <Field label="Reason">
-            <Input {...register("reason")} placeholder="e.g. Spoiled / burnt / expired" />
-          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Reason">
+              <Input {...register("reason")} placeholder="e.g. Spoiled / burnt / expired" />
+            </Field>
+            <Field label="Approved By">
+              <Input {...register("approved_by")} placeholder="Manager name (optional)" />
+            </Field>
+          </div>
           <Field label="Notes">
             <Textarea rows={2} {...register("notes")} placeholder="Optional" />
           </Field>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowDown,
   ArrowUp,
@@ -10,6 +11,7 @@ import {
   Sprout,
   TriangleAlert,
   Trash2,
+  ChefHat,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState } from "@/components/EmptyState";
@@ -40,11 +42,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { formatINR, formatDate } from "@/lib/utils";
 import { useSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
 import type { IngredientYield, RawMaterial } from "@/lib/data/types";
 import { useMaterials } from "@/features/raw-materials/hooks";
+import { useRecipes } from "@/features/recipes/hooks";
+import { useAllRecipeIngredients } from "@/features/reports/hooks";
 import { useYields, useDeleteYield } from "./hooks";
 import { YieldForm } from "./YieldForm";
 import { YieldBreakdownDialog } from "./YieldBreakdownDialog";
@@ -55,9 +66,12 @@ type SortKey = "name" | "wastage" | "yield" | "cost";
 
 export function YieldPage() {
   const user = useSession((s) => s.user)!;
+  const navigate = useNavigate();
   const canEdit = can(user.role, "yield.manage");
   const { data: yields = [], isLoading } = useYields();
   const { data: materials = [] } = useMaterials();
+  const { data: recipes = [] } = useRecipes();
+  const { data: recipeIngredients = [] } = useAllRecipeIngredients();
   const deleteMut = useDeleteYield();
 
   const matById = useMemo(() => new Map(materials.map((m) => [m.id, m])), [materials]);
@@ -66,8 +80,25 @@ export function YieldPage() {
     [materials],
   );
 
+  // Recipes that use a given ingredient (§6 "View recipes using ingredient").
+  const recipesUsing = useMemo(() => {
+    const recById = new Map(recipes.map((r) => [r.id, r]));
+    const map = new Map<string, { id: string; name: string }[]>();
+    for (const ri of recipeIngredients) {
+      if (ri.component_type === "recipe") continue;
+      const r = recById.get(ri.recipe_id);
+      if (!r) continue;
+      const list = map.get(ri.ingredient_id) ?? [];
+      if (!list.some((x) => x.id === r.id)) list.push({ id: r.id, name: r.recipe_name });
+      map.set(ri.ingredient_id, list);
+    }
+    return map;
+  }, [recipeIngredients, recipes]);
+
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
+  const [wastageBand, setWastageBand] = useState("all");
+  const [yieldBand, setYieldBand] = useState("all");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "name", dir: "asc" });
   const [page, setPage] = useState(1);
 
@@ -75,6 +106,7 @@ export function YieldPage() {
   const [editing, setEditing] = useState<IngredientYield | null>(null);
   const [breakdownFor, setBreakdownFor] = useState<IngredientYield | null>(null);
   const [deleting, setDeleting] = useState<IngredientYield | null>(null);
+  const [recipesForYield, setRecipesForYield] = useState<(IngredientYield & { material: RawMaterial | null }) | null>(null);
 
   type Row = IngredientYield & { material: RawMaterial | null };
   const rows = useMemo<Row[]>(
@@ -87,6 +119,12 @@ export function YieldPage() {
       const name = r.material?.ingredient_name ?? "";
       if (search && !name.toLowerCase().includes(search.toLowerCase())) return false;
       if (category !== "all" && r.material?.category !== category) return false;
+      if (wastageBand === "low" && r.wastage_percentage >= 10) return false;
+      if (wastageBand === "med" && (r.wastage_percentage < 10 || r.wastage_percentage > 25)) return false;
+      if (wastageBand === "high" && r.wastage_percentage <= 25) return false;
+      if (yieldBand === "high" && r.yield_percentage < 90) return false;
+      if (yieldBand === "med" && (r.yield_percentage < 75 || r.yield_percentage >= 90)) return false;
+      if (yieldBand === "low" && r.yield_percentage >= 75) return false;
       return true;
     });
     out.sort((a, b) => {
@@ -99,7 +137,7 @@ export function YieldPage() {
       return sort.dir === "asc" ? cmp : -cmp;
     });
     return out;
-  }, [rows, search, category, sort]);
+  }, [rows, search, category, wastageBand, yieldBand, sort]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, pageCount);
@@ -174,13 +212,31 @@ export function YieldPage() {
 
       {/* Filters */}
       <Card className="mb-4 p-4">
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <Input placeholder="Search ingredients…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
           <Select value={category} onValueChange={(v) => { setCategory(v); setPage(1); }}>
             <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
               {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={wastageBand} onValueChange={(v) => { setWastageBand(v); setPage(1); }}>
+            <SelectTrigger><SelectValue placeholder="Wastage" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Any Wastage</SelectItem>
+              <SelectItem value="low">Low (&lt; 10%)</SelectItem>
+              <SelectItem value="med">Medium (10–25%)</SelectItem>
+              <SelectItem value="high">High (&gt; 25%)</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={yieldBand} onValueChange={(v) => { setYieldBand(v); setPage(1); }}>
+            <SelectTrigger><SelectValue placeholder="Yield" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Any Yield</SelectItem>
+              <SelectItem value="high">High (≥ 90%)</SelectItem>
+              <SelectItem value="med">Medium (75–90%)</SelectItem>
+              <SelectItem value="low">Low (&lt; 75%)</SelectItem>
             </SelectContent>
           </Select>
           <Select
@@ -244,6 +300,7 @@ export function YieldPage() {
                           canEdit={canEdit}
                           onEdit={() => { setEditing(r); setFormOpen(true); }}
                           onBreakdown={() => setBreakdownFor(r)}
+                          onRecipes={() => setRecipesForYield(r)}
                           onDelete={() => setDeleting(r)}
                         />
                       </TableCell>
@@ -269,6 +326,7 @@ export function YieldPage() {
                     canEdit={canEdit}
                     onEdit={() => { setEditing(r); setFormOpen(true); }}
                     onBreakdown={() => setBreakdownFor(r)}
+                    onRecipes={() => setRecipesForYield(r)}
                     onDelete={() => setDeleting(r)}
                   />
                 </li>
@@ -304,6 +362,38 @@ export function YieldPage() {
           }
         }}
       />
+
+      <Dialog open={!!recipesForYield} onOpenChange={(o) => !o && setRecipesForYield(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Recipes using {recipesForYield?.material?.ingredient_name ?? "this ingredient"}</DialogTitle>
+            <DialogDescription>
+              These recipes apply this ingredient's yield-adjusted cost. Editing the yield re-costs them all.
+            </DialogDescription>
+          </DialogHeader>
+          {(() => {
+            const list = recipesForYield ? recipesUsing.get(recipesForYield.ingredient_id) ?? [] : [];
+            if (list.length === 0) {
+              return <p className="py-4 text-sm text-muted-foreground">No recipes currently use this ingredient.</p>;
+            }
+            return (
+              <ul className="max-h-80 divide-y overflow-y-auto">
+                {list.map((r) => (
+                  <li key={r.id}>
+                    <button
+                      onClick={() => { navigate(`/recipes/${r.id}`); setRecipesForYield(null); }}
+                      className="flex w-full items-center gap-2 py-2.5 text-left text-sm hover:underline"
+                    >
+                      <ChefHat className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{r.name}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -322,12 +412,14 @@ function RowActions({
   canEdit,
   onEdit,
   onBreakdown,
+  onRecipes,
   onDelete,
 }: {
   y: IngredientYield & { material: RawMaterial | null };
   canEdit: boolean;
   onEdit: () => void;
   onBreakdown: () => void;
+  onRecipes: () => void;
   onDelete: () => void;
 }) {
   return (
@@ -339,6 +431,9 @@ function RowActions({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={onBreakdown}>View Calculation Breakdown</DropdownMenuItem>
+        <DropdownMenuItem onClick={onRecipes}>
+          <ChefHat className="h-4 w-4" /> Recipes Using This
+        </DropdownMenuItem>
         {canEdit && <DropdownMenuItem onClick={onEdit}>Edit Yield</DropdownMenuItem>}
         {canEdit && (
           <DropdownMenuItem onClick={onDelete} className="text-destructive">
