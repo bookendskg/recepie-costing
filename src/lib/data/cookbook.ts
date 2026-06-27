@@ -19,6 +19,8 @@ export interface CookbookRecipe {
   /** Net dish weight in grams (0 if the page didn't state it). */
   yield_grams: number;
   ingredients: CookbookIngredient[];
+  /** Ordered METHOD steps from the cookbook page. */
+  method?: string[];
 }
 
 export const COOKBOOK_RECIPES: CookbookRecipe[] = [
@@ -101,6 +103,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 80,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Toss leaves with vinaigrette & salt.",
+      "Add cherry tomato, grapefruit, olives.",
+      "Place burrata in centre.",
+      "Arrange salad mix around.",
+      "Sprinkle pine nuts; drizzle olive oil & hot honey.",
+      "Garnish with edible flowers."
     ]
   },
   {
@@ -152,6 +162,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 50,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Tear leaves.",
+      "Slice onion rings.",
+      "Toss lettuce with mayo, salt, pepper.",
+      "Add parmesan and croutons.",
+      "Check seasoning.",
+      "Plate; garnish with onion rings."
     ]
   },
   {
@@ -243,6 +261,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 50,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Blend all pesto ingredients until smooth.",
+      "Spread pesto circularly on flat plate.",
+      "Add confit cherry tomatoes and toasted hazelnuts.",
+      "Place burrata in centre; slit open slightly.",
+      "Add chopped salad mix; drizzle olive oil."
     ]
   },
   {
@@ -309,6 +334,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 5,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Toss arugula with vinaigrette; do not overdress.",
+      "Arrange on chilled serving plate.",
+      "Place persimmon and strawberry evenly over greens.",
+      "Add burrata as soft dollops; season lightly.",
+      "Spoon caviar on burrata; sprinkle pine nuts and edible flowers.",
+      "Drizzle hot honey; serve immediately."
     ]
   },
   {
@@ -405,6 +438,16 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 5,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Process iceberg lettuce, romaine lettuce, and Lollo Rosso. Give them an ice bath to keep them crisp.",
+      "In a large bowl, combine all processed leaves. Add salt, black pepper, and vinaigrette. Add arugula and toss well.",
+      "Cut mango and grapefruit into cubes.",
+      "Plate the mixed leaves. Place a burrata on top.",
+      "Drizzle olive oil over the burrata and add crushed black pepper.",
+      "Arrange cubed mango, grapefruit, and cherry tomatoes around the burrata. Add edible flowers.",
+      "Scatter roasted hazelnuts and chopped granola.",
+      "Finish with a drizzle of hot honey."
     ]
   },
   {
@@ -481,6 +524,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 5,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Roast veg until soft/charred; cool. Peel peppers if desired.",
+      "Blend smooth; strain if desired. Chili; portion 120 g per serve.",
+      "Melt a little CDP butter; add 120 g paste, sauté 1 min. Add 160 g water; season; add sour cream; simmer low 3–4 min.",
+      "Spread 5 g garlic butter on 70 g sourdough; toast until crisp.",
+      "Bowl soup; swirl pesto; sprinkle sesame. Serve hot with bread."
     ]
   },
   {
@@ -517,6 +567,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 0,
         "unit": "ML"
       }
+    ],
+    "method": [
+      "Prepare rice mix; cool completely.",
+      "Weigh 16 g rice mix, add 3 g mozzarella, shape into ball (~19 g). Repeat for 6.",
+      "Dip into batter.",
+      "Coat with panko crumbs.",
+      "Deep fry at 180 °C for ~4–5 min; core ≈ 74 °C.",
+      "Drain; plate with hot mayo & green garlic."
     ]
   },
   {
@@ -553,6 +611,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 2,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Divide dough into 6–8 × ~20 g balls.",
+      "Roll and place on screen.",
+      "Bake at 350 °C ~2 min until puffed.",
+      "Toss in melted butter, garlic, parsley.",
+      "Garnish with green garlic.",
+      "Serve immediately."
     ]
   },
   {
@@ -589,6 +655,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 7,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Bake base; cool slightly.",
+      "Deep cut into 8 wedges.",
+      "Stuff cream cheese between cuts.",
+      "Brush with butter + chopped garlic.",
+      "Microwave 30 s.",
+      "Bake at 350 °C for 2 min until golden; garnish green garlic."
     ]
   },
   {
@@ -690,6 +764,16 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 0,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Mix all filling ingredients well.",
+      "Cut pasta sheets into 1 x 4 pieces.",
+      "Spread ricotta filling, place mozzarella stick and a line of tomato paste. Roll tightly.",
+      "Freeze for 15 min.",
+      "Dip in batter; coat with bread crumbs.",
+      "Deep fry at 160-180 °C for 4-5 min; finish in oven 10-15 sec.",
+      "Grate parmesan; top with green garlic.",
+      "Serve with garlic ranch & hot tomato sauce."
     ]
   },
   {
@@ -756,6 +840,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 3,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat oil; cook mushrooms.",
+      "Add garlic; sauté.",
+      "Add basil, parsley; season.",
+      "Toss with vinaigrette & chilli flakes.",
+      "Add butters.",
+      "Serve hot."
     ]
   },
   {
@@ -842,6 +934,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 3,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat olive oil in a pan. Add Brussels sprouts (cut in halves) and char on high heat.",
+      "Add butter, garlic, chilli flakes, salt, pepper, and balsamic vinegar. Toss well.",
+      "In another pan, combine cream cheese, béchamel, sour cream, mayonnaise, salt, and black pepper. Cook on low heat until smooth.",
+      "Spread the cream cheese sauce on a plate and place the charred Brussels sprouts on top.",
+      "Garnish with fresh Bhavnagri chilli, pickled onions, and feta crumbles."
     ]
   },
   {
@@ -933,6 +1032,15 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 5,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat olive oil in a pot, add onion, garlic, carrot, chili, thyme, bay leaf, parsley stems. Sauté until soft and lightly golden.",
+      "Add tomatoes, cook down until jammy.",
+      "Add water and stock powder, simmer 20 min.",
+      "Remove bay leaf and thyme stems. Blend until smooth.",
+      "Take off heat, whisk in miso paste.",
+      "Adjust seasoning with soy, salt, and pepper.",
+      "Stir in chopped fresh basil just before serving."
     ]
   },
   {
@@ -999,6 +1107,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 0,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat oil; sauté cherry tomatoes.",
+      "Add pomodoro; season.",
+      "Add spaghetti; toss.",
+      "Simmer; add butter.",
+      "Finish with basil; parmesan garnish."
     ]
   },
   {
@@ -1045,6 +1160,12 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 200,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat butter; add hot sauce; season.",
+      "Add orange sauce; stir.",
+      "Add cream; adjust seasoning.",
+      "Toss macaroni; serve."
     ]
   },
   {
@@ -1111,6 +1232,11 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 100,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat oil & butter; add garlic, herbs.",
+      "Add béchamel; season; adjust with water.",
+      "Toss fettuccine; finish with parmesan."
     ]
   },
   {
@@ -1172,6 +1298,12 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 2,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat butter; add white sauce, mascarpone.",
+      "Add lemon; season.",
+      "Toss linguini; adjust with water.",
+      "Finish with basil; parmesan."
     ]
   },
   {
@@ -1238,6 +1370,12 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 100,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat butter+oil; sauté garlic, asparagus, peas.",
+      "Add rice; season.",
+      "Add water; add béchamel.",
+      "Finish with parmesan; serve."
     ]
   },
   {
@@ -1344,6 +1482,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 30,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat oil in a pan; sauté onion, carrot, celery and garlic until soft.",
+      "Add soaked and drained soy chunks; cook for 3–4 min.",
+      "Add tomato passata, tomato paste, oregano, salt and pepper. Simmer 15–20 min.",
+      "Make béchamel: melt butter, add flour; cook 1 min. Gradually whisk in milk. Cook until thick. Season with salt and nutmeg.",
+      "In a baking dish, layer: bolognese sauce, sheets, béchamel, mozzarella. Repeat layers. Top with parmesan.",
+      "Bake at 180°C for 40–45 min or until golden and bubbling. Rest 10 min before serving."
     ]
   },
   {
@@ -1415,6 +1561,15 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 5,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Mix ricotta, cream cheese, blanched kale, chopped jalapeño, salt and xanthan gum into a smooth, well-seasoned filling.",
+      "Stuff each boiled conchiglioni generously with the kale-ricotta filling.",
+      "Spoon garlic pomodoro sauce as a base in a shallow oven dish.",
+      "Arrange stuffed shells on the sauce base.",
+      "Sprinkle parmesan and red paprika on top.",
+      "Bake at 350°C for 6 min until golden and heated through.",
+      "Garnish with slit onion and sunflower seeds."
     ]
   },
   {
@@ -1481,6 +1636,17 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 1,
         "unit": "Piece"
       }
+    ],
+    "method": [
+      "Heat olive oil in a pan over medium heat.",
+      "Add chopped garlic and sauté until fragrant.",
+      "Add caramelised onion and cook for 1–2 min.",
+      "Add 1 ladle of water; bring to a gentle simmer.",
+      "Add spaghetti and mix well to coat.",
+      "Add mix seasoning, fresh cream and soya sauce. Toss until pasta is creamy and well combined.",
+      "Adjust consistency with water if needed.",
+      "Finish with chilli crisp and parmesan. Toss to combine.",
+      "Plate and garnish with fresh parsley. Serve immediately."
     ]
   },
   {
@@ -1552,6 +1718,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 2,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Roast beetroot with olive oil wrapped in foil paper. Once roasted, strain and blend into a purée.",
+      "Heat a pan. Add pesto white sauce.",
+      "Add farfalle pasta. Season with black pepper, chilli flakes, butter, and salt. Mix well.",
+      "Add beetroot purée and toss until the sauce turns pink.",
+      "Plate and garnish with a smashed burrata dollop, crushed pumpkin seeds and pistachios, olive oil, and crushed black pepper."
     ]
   },
   {
@@ -1633,6 +1806,12 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 1,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat olive oil in a pan. Add garlic and onion and sauté until softened.",
+      "Add pomodoro sauce, water, salt, and black pepper. Stir well.",
+      "Add risotto rice and butter. Cook well, stirring frequently. Finish with Parmesan.",
+      "Plate and garnish with confit cherry tomatoes, a pesto dollop, arugula, and chopped kalonji."
     ]
   },
   {
@@ -1714,6 +1893,12 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 0.5,
         "unit": "Piece"
       }
+    ],
+    "method": [
+      "Heat a pan. Add béchamel sauce, cheddar cheese, and mozzarella cheese. Melt together.",
+      "Add boiled pasta and mix well. Season with salt and black pepper. Add parmesan and butter.",
+      "Transfer into a steel plate. Top with cheddar cheese, mozzarella cheese, and parmesan. Bake in oven.",
+      "Remove from oven. Garnish with truffle oil, truffle pâté, and spring onion."
     ]
   },
   {
@@ -1760,6 +1945,15 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 5,
         "unit": "ML"
       }
+    ],
+    "method": [
+      "Prepare dough: Remove dough ball. Lightly dust bench and dough with ~10 g rice flour.",
+      "Shape: Press centre to expel large bubbles; keep 12 mm rim. Hand-stretch to 11\" or 15\".",
+      "Sauce: Spread as per ingredients; leave 12 mm border.",
+      "Cheese & toppings: Add per size/weights.",
+      "Bake: Deck at 350 °C for ~6:00; rotate at 3:00. Rim golden; cheese melted; base dry & crisp.",
+      "Finish & serve: Slice 6 (11\") / 8 (15\"). Serve immediately.",
+      "Finish with fresh basil and EVOO."
     ]
   },
   {
@@ -1806,6 +2000,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 20,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare dough: Remove dough ball. Lightly dust bench and dough with ~10 g rice flour.",
+      "Shape: Press centre to expel large bubbles; keep 12 mm rim. Hand-stretch to 11\" or 15\".",
+      "Sauce: Spread as per ingredients; leave 12 mm border.",
+      "Cheese & toppings: Add per size/weights.",
+      "Bake: Deck at 350 °C for ~6:00; rotate at 3:00. Rim golden; cheese melted; base dry & crisp.",
+      "Finish & serve: Slice 6 (11\") / 8 (15\"). Serve immediately."
     ]
   },
   {
@@ -1852,6 +2054,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 80,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Shape dough; dust peel.",
+      "Spread pomodoro; leave 12 mm rim.",
+      "Add mozzarella and buffalo.",
+      "Add jalapeño.",
+      "Bake ~6 min; rotate once.",
+      "Post-bake: arugula (optional); ricotta. Slice & serve."
     ]
   },
   {
@@ -1908,6 +2118,15 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 5,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare dough: Remove dough ball. Lightly dust bench and dough with ~10 g rice flour.",
+      "Shape: Press centre to expel large bubbles; keep 12 mm rim. Hand-stretch to 11\" or 15\".",
+      "Sauce: Spread as per ingredients; leave 12 mm border.",
+      "Cheese & toppings: Add per size/weights.",
+      "Bake: Deck at 350 °C for ~6:00; rotate at 3:00. Rim golden; cheese melted; base dry & crisp.",
+      "Finish & serve: Slice 6 (11\") / 8 (15\"). Top with marinated arugula and sliced almonds after baking. Serve immediately.",
+      "Tip: For extra flavour, toss arugula lightly in EVOO before topping."
     ]
   },
   {
@@ -1959,6 +2178,15 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 15,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare dough: Remove dough ball. Lightly dust bench and dough with ~10 g rice flour.",
+      "Shape: Press centre to expel large bubbles; keep 12 mm rim. Hand-stretch to 11\" or 15\".",
+      "Sauce: Spread as per ingredients; leave 12 mm border.",
+      "Cheese & toppings: Add per size/weights.",
+      "Bake: Deck at 350 °C for ~6:00; rotate at 3:00. Rim golden; cheese melted; base dry & crisp.",
+      "Finish & serve: Slice 6 (11\") / 8 (15\"). Serve immediately.",
+      "Finish with chilli crisp on each slice."
     ]
   },
   {
@@ -2005,6 +2233,16 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 10,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare dough: Remove dough ball. Lightly dust bench and dough with ~10 g rice flour.",
+      "Shape: Press centre to expel large bubbles; keep 12 mm rim. Hand-stretch to 11\" or 15\".",
+      "Sauce: Spread as per ingredients; leave 12 mm border.",
+      "Cheese & toppings: Add per size/weights.",
+      "Bake: Deck at 350 °C for ~6:00; rotate at 3:00. Rim golden; cheese melted; base dry & crisp.",
+      "Finish & serve: Slice 6 (11\") / 8 (15\"). Serve immediately.",
+      "Add sliced and chopped garlic before bake.",
+      "Garnish with green garlic."
     ]
   },
   {
@@ -2046,6 +2284,15 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 3,
         "unit": "ML"
       }
+    ],
+    "method": [
+      "Prepare dough: Remove dough ball. Lightly dust bench and dough with ~10 g rice flour.",
+      "Shape: Press centre to expel large bubbles; keep 12 mm rim. Hand-stretch to 11\" or 15\".",
+      "Sauce: Spread as per ingredients; leave 12 mm border.",
+      "Cheese & toppings: Add per size/weights.",
+      "Bake: Deck at 350 °C for ~6:00; rotate at 3:00. Rim golden; cheese melted; base dry & crisp.",
+      "Finish & serve: Slice 6 (11\") / 8 (15\"). Serve immediately.",
+      "Drizzle truffle oil and dot with truffle paste; serve immediately."
     ]
   },
   {
@@ -2087,6 +2334,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 15,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare dough; dust peel.",
+      "Spread tomato cream as base; leave 12 mm rim.",
+      "Add buffalo mozzarella; dollop pomodoro sparingly.",
+      "Bake: Deck at 350 °C for ~6:00; rotate at 3:00.",
+      "Finish & serve: Slice.",
+      "Swirl pesto + sriracha post-bake."
     ]
   },
   {
@@ -2128,6 +2383,12 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 10,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare dough; dust peel.",
+      "Cheese first; then spread three sauces.",
+      "Bake: Deck at 350 °C ~6:00; rotate at 3:00.",
+      "Finish with grated parmesan."
     ]
   },
   {
@@ -2179,6 +2440,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 3,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare dough; dust peel.",
+      "Spread pomodoro with oregano; leave 12 mm rim.",
+      "Only base sauce pre-bake.",
+      "Bake: Deck at 350 °C ~6:00; rotate at 3:00.",
+      "Dot burrata, drizzle hot honey & garlic oil; sprinkle gochugaru."
     ]
   },
   {
@@ -2245,6 +2513,16 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 10,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare dough: Remove dough ball. Lightly dust bench and dough with ~10 g rice flour.",
+      "Shape: Press centre to expel large bubbles; keep 12 mm rim. Hand-stretch to 11\" or 15\".",
+      "Sauce: Spread as per ingredients; leave 12 mm border.",
+      "Cheese & toppings: Add per size/weights.",
+      "Bake: Deck at 350 °C ~6:00; rotate at 3:00. Rim golden; cheese melted; base dry & crisp.",
+      "Finish & serve: Slice 6 (11\") / 8 (15\"). Serve immediately.",
+      "Load veg before bake.",
+      "Finish with arugula, feta, breadcrumbs."
     ]
   },
   {
@@ -2306,6 +2584,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 8,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Shape; dust peel.",
+      "Spread base; leave 12 mm rim.",
+      "Add onions, garlic, capers; then mozzarella.",
+      "Add mushrooms.",
+      "Bake ~6 min; rotate once.",
+      "Post-bake: ricotta; spring onion. Slice & serve."
     ]
   },
   {
@@ -2372,6 +2658,16 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 10,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare dough: Remove dough ball. Lightly dust bench and dough with ~10 g rice flour.",
+      "Shape: Press centre to expel large bubbles; keep 12 mm rim. Hand-stretch to 11\" or 15\".",
+      "Sauce: Spread as per ingredients; leave 12 mm border.",
+      "Cheese & toppings: Add per size/weights.",
+      "Bake: Deck at 350 °C ~6:00; rotate at 3:00. Rim golden; cheese melted; base dry & crisp.",
+      "Finish & serve: Slice 6 (11\") / 8 (15\"). Serve immediately.",
+      "Mix chili oil + ghost pepper into sauce or drizzle before baking.",
+      "Finish with gochugaru."
     ]
   },
   {
@@ -2418,6 +2714,16 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 5,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare dough: Remove dough ball. Lightly dust bench and dough with ~10 g rice flour.",
+      "Shape: Press centre to expel large bubbles; keep 12 mm rim. Hand-stretch to 11\" or 15\".",
+      "Sauce: Spread as per ingredients; leave 12 mm border.",
+      "Cheese & toppings: Add per size/weights.",
+      "Bake: Deck at 350 °C ~6:00; rotate at 3:00. Rim golden; cheese melted; base dry & crisp.",
+      "Finish & serve: Slice 6 (11\") / 8 (15\"). Serve immediately.",
+      "Add jalapeño and small dollops of vegan nduja pre-bake.",
+      "Finish with pickled onion and basil."
     ]
   },
   {
@@ -2464,6 +2770,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 20,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare dough; dust peel.",
+      "Spread Hulk sauce (pesto + cream + sriracha) as base; leave 12 mm rim.",
+      "Add mozzarella and buffalo.",
+      "Bake: Deck at 350 °C ~6:00; rotate at 3:00.",
+      "Pipe sour cream post-bake. Slice & serve."
     ]
   },
   {
@@ -2535,6 +2848,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 25,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare dough; dust peel.",
+      "Spread leek cream cheese sauce as base; leave 12 mm rim.",
+      "Add buffalo mozzarella followed by mozzarella (grated).",
+      "Add green chilli, garlic slices, marinated potato and parmesan; drizzle olive oil.",
+      "Bake: Deck at 350 °C ~6 min; rotate at 3 min. Base fully cooked, cheese melted and lightly golden.",
+      "After baking: finish with spicy pesto, bell pepper jam and fried potato julienne."
     ]
   },
   {
@@ -2626,6 +2947,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 1,
         "unit": "Piece"
       }
+    ],
+    "method": [
+      "In a bowl, combine pomodoro sauce and red Sriracha. Mix well to form the sauce base.",
+      "Take a dough ball and roll it out. Spread the sauce evenly over the base.",
+      "Top with grated smoked cheese, grated cheddar cheese, and garlic slices.",
+      "Bake until cooked through and the crust is golden.",
+      "After baking, garnish with honey butter drizzle, chunky chimichurri, and a whipped feta dollop."
     ]
   },
   {
@@ -2737,6 +3065,15 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 0,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Char the corn on high heat.",
+      "In a bowl, combine corn, mayonnaise, sour cream, parmesan, Tajín, lime juice and zest, coriander, and salt. Mix well.",
+      "In a separate bowl, mix fresh cream, garlic, lemon juice, salt, and black pepper to make the white sauce.",
+      "Spread white sauce on the pizza base. Layer with mozzarella, cheddar, corn mix, jalapeño slices, and garlic slices. Finish the crust edge with black sesame.",
+      "Mix butter, chilli crisp, and red chilli powder to make chilli butter.",
+      "Bake at 340°C until fully cooked.",
+      "After baking, garnish with chilli butter dollop, spring onion, gochugaru, and dynamite crunch."
     ]
   },
   {
@@ -2763,6 +3100,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 60,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Bake pudding.",
+      "Warm pudding before service.",
+      "Plate pudding.",
+      "Pour caramel sauce.",
+      "Add pecan ice cream.",
+      "Serve immediately."
     ]
   },
   {
@@ -2794,6 +3139,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 5,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Bake and portion brownies.",
+      "Warm before serving.",
+      "Plate brownie.",
+      "Add ice cream scoop.",
+      "Drizzle Nutella.",
+      "Garnish tuile."
     ]
   },
   {
@@ -2825,6 +3178,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 10,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Place kunafa base.",
+      "Add sponge layer.",
+      "Pipe mousse.",
+      "Garnish with white chocolate décor.",
+      "Add pistachio crumble if available.",
+      "Serve chilled."
     ]
   },
   {
@@ -2861,6 +3222,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 5,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Layer sponge.",
+      "Add mascarpone mousse.",
+      "Add coffee cream.",
+      "Top with sable and tuile.",
+      "Chill to set.",
+      "Serve chilled."
     ]
   },
   {
@@ -2887,6 +3256,12 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 210,
         "unit": "ML"
       }
+    ],
+    "method": [
+      "Glass & ice (0:00-0:10): Fill with cubed ice.",
+      "Build (0:10-0:35): Add lemon juice and sugar syrup.",
+      "Top (0:35-1:00): Add iced tea to reach 300 ml net.",
+      "Garnish & QC (1:00-1:20): Stir once; garnish with dried lemon."
     ]
   },
   {
@@ -2913,6 +3288,12 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 200,
         "unit": "ML"
       }
+    ],
+    "method": [
+      "Glass & ice (0:00–0:10): Fill with cubed ice.",
+      "Build (0:10–0:25): Add lemon juice and mint syrup.",
+      "Top (0:25–0:50): Add soda; gentle lift with bar spoon.",
+      "Garnish & QC (0:50–1:10): Slap mint; place at rim."
     ]
   },
   {
@@ -2949,6 +3330,11 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 60,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Load (0:00-0:20): All ingredients incl. ice in blender.",
+      "Blend (0:20-0:50): Smooth, ~30 s.",
+      "Pour & garnish (0:50-1:20): Into chilled glass; garnish."
     ]
   },
   {
@@ -2975,6 +3361,12 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 292.5,
         "unit": "ML"
       }
+    ],
+    "method": [
+      "Fill mule mug with cubed ice.",
+      "Add lemon juice and ginger zest into mug.",
+      "Add ginger beer to 320 ml; stir gently with bar spoon; lift once.",
+      "Garnish with lemon wheel and rosemary sprig."
     ]
   },
   {
@@ -3006,6 +3398,12 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 140,
         "unit": "ML"
       }
+    ],
+    "method": [
+      "Glass & ice (0:00–0:10): Fill bamboo glass with cubed ice.",
+      "Build (0:10–0:30): Add lemon juice, orange juice, and hibiscus syrup.",
+      "Top (0:30–0:55): Add Sprite to 230 ml; pour gently over the back of a spoon for a layered effect; gentle lift.",
+      "Garnish & QC (0:55–1:15): Garnish with fresh jalapeño slice on rim."
     ]
   },
   {
@@ -3032,6 +3430,12 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 170,
         "unit": "ML"
       }
+    ],
+    "method": [
+      "Glass & ice (0:00–0:10): Fill bamboo glass with cubed ice.",
+      "Build (0:10–0:25): Add tamarind syrup and salt.",
+      "Top (0:25–0:50): Top with Schweppes Ginger Ale to 220 ml; stir gently; lift once.",
+      "Garnish & QC (0:50–1:15): Garnish with basil."
     ]
   },
   {
@@ -3083,6 +3487,12 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 50,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Blend chilli, onion, garlic, mushroom to coarse paste.",
+      "Cook paste until aromatic.",
+      "Add tamarind, water, vinegar, sugar; simmer 8-10 min.",
+      "Adjust hot-sour balance as per standard."
     ]
   },
   {
@@ -3129,6 +3539,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 10,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Place approximately 30 g Thai spring filling on each spring roll sheet.",
+      "Roll tightly while folding the sides inward. Seal the edge using slurry/water if required.",
+      "Heat oil to 170-175°C. Carefully fry spring rolls until golden brown and crispy.",
+      "Remove and drain excess oil on absorbent paper.",
+      "Serve spring rolls as entire pieces. Drizzle with sriracha sauce. Garnish with spring onion slit."
     ]
   },
   {
@@ -3185,6 +3602,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 5,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Fry lotus root until crisp; drain well.",
+      "Heat wok; add garlic + chilli; sauté briefly.",
+      "Add onion + bell pepper; toss 30–40 sec.",
+      "Add sauce + pok choy; bring to bubble.",
+      "Add lotus root; toss quickly to coat.",
+      "Finish spring onion + basil; plate immediately."
     ]
   },
   {
@@ -3226,6 +3651,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 0,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Place approx. 15 g of Kwispy Wonton filling in the center of each gyoza skin.",
+      "Apply corn slurry on the edges. Fold and seal tightly in desired shape.",
+      "Heat oil to 170–175°C. Carefully drop wontons into hot oil.",
+      "Fry for 3–4 minutes or until golden brown and crispy.",
+      "Remove and drain excess oil on paper towel."
     ]
   },
   {
@@ -3282,6 +3714,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 2,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Blanch rice cakes until soft; drain well.",
+      "Heat pan; add water + sauce; bring to simmer.",
+      "Add rice cakes; toss to coat.",
+      "Add salt, MSG, sugar; reduce until glossy.",
+      "Finish spring onion + fried garlic; garnish with spring onion slit."
     ]
   },
   {
@@ -3328,6 +3767,18 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 20,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Mise en place: Keep all ingredients measured and ready. Slice cucumber into thin strips. Prepare coleslaw chilled. Heat oil to 170-175°C. Steam bao until soft and warm.",
+      "Coat tofu evenly with tofu batter.",
+      "Deep fry at 170-175°C until golden brown and crispy.",
+      "Remove and drain excess oil on absorbent paper.",
+      "Open warm bao carefully without tearing.",
+      "Spread bao sauce base evenly inside the bao.",
+      "Add coleslaw followed by crispy tofu.",
+      "Place cucumber strips neatly on top.",
+      "Garnish with black & white sesame.",
+      "Serve immediately while bao is warm and tofu is crispy."
     ]
   },
   {
@@ -3399,6 +3850,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 10,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Coat water chestnut with flour; shake off excess. Deep fry until golden and crispy; drain.",
+      "Heat wok on high flame. Add chopped garlic, Thai red chilli and onion; stir-fry until aromatic.",
+      "Add yellow and red bell peppers; stir-fry until slightly soft yet crunchy.",
+      "Add sauces (gyoza dip + drunken sauce); bring to a simmer and stir until the glaze thickens.",
+      "Add fried water chestnuts and spring onion; toss quickly to coat. Finish with basil. Transfer to serving bowl. Garnish with fried spring roll strips."
     ]
   },
   {
@@ -3425,6 +3883,12 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 4,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Steam edamame with pods until tender and hot. Drain any excess water.",
+      "Transfer steamed edamame to a bowl.",
+      "For chilli version: Add chilli crisp and toss evenly to coat. For salted version: Add salt and toss evenly to coat.",
+      "Serve hot immediately."
     ]
   },
   {
@@ -3466,6 +3930,15 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 1,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare Korean Mandu filling (see filling method below). Allow to cool completely.",
+      "Place 1 portion (approx. 75 g) of filling in the center of the gyoza skin.",
+      "Moisten edges with water. Fold and pleat to seal securely.",
+      "Heat oil to 175°C. Fry mandu until golden brown and crisp, about 3–4 minutes. Drain excess oil.",
+      "Drizzle spicy mayo and coriander mayo over mandu.",
+      "Garnish with toasted white sesame seeds and julienne cut nori sheets.",
+      "Serve hot immediately."
     ]
   },
   {
@@ -3547,6 +4020,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 0.5,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat corn rocks sauce in a pan over medium heat.",
+      "Add water and stir well to adjust the consistency. Bring to a simmer.",
+      "Add fried corn and toss to coat evenly with the sauce.",
+      "Cook for 1–2 minutes until the sauce clings to the corn and is creamy.",
+      "Transfer to a bowl.",
+      "Garnish with chopped black sesame seeds, spring onion and pickled red paprika slices. Serve hot immediately."
     ]
   },
   {
@@ -3593,6 +4074,16 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 2,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare all components as per recipes below.",
+      "Cook scallion pancake until golden brown and crispy on both sides.",
+      "Heat Sichuan soy glaze and brush over the pancake.",
+      "Drizzle green garlic cream cheese and sriracha sauce over the top.",
+      "Top with scallion salad.",
+      "Sprinkle toasted white sesame seeds.",
+      "Slice or serve whole.",
+      "Serve hot immediately."
     ]
   },
   {
@@ -3644,6 +4135,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 15,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Cook soba noodles as per package instructions. Rinse in cold water and drain well.",
+      "In a bowl, add cold spicy sesame sauce and place the noodles. Toss well to coat evenly.",
+      "Arrange cucumber slices, carrot slices and mix iceberg romaine on the side of the plate.",
+      "Place the sauced noodles in the center.",
+      "Top with white part spring onion, crushed peanuts and fried sesame.",
+      "Serve immediately. Keep chilled until serving."
     ]
   },
   {
@@ -3700,6 +4199,26 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 25,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Combine water and dry yeast.",
+      "Add flour and mix until shaggy.",
+      "Cover loosely and ferment 12–16 h at room temp.",
+      "Add fermented biga in mixer.",
+      "Add cold water gradually.",
+      "Add flour and dry yeast; mix.",
+      "Add salt; mix 4–5 min.",
+      "Drizzle EVOO; mix smooth (windowpane test).",
+      "Rest 1–2 h.",
+      "Divide into 150 g balls.",
+      "Place in oiled trays; cover.",
+      "Cold-ferment (CF) 48 h.",
+      "Remove dough; temper 1 h.",
+      "Spread/stretch dough evenly.",
+      "Apply pizza sauce evenly.",
+      "Top evenly with cheese and desired toppings.",
+      "Bake in a preheated oven until crust is blistered and golden.",
+      "Finish with fresh basil after baking."
     ]
   },
   {
@@ -3756,6 +4275,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 10,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat katsu curry gently (do not boil).",
+      "Heat tofu if required.",
+      "Plate rice.",
+      "Arrange tofu, pour curry.",
+      "Garnish cabbage, cucumber, sesame, togarashi.",
+      "Finish scallion oil + unagi."
     ]
   },
   {
@@ -3842,6 +4369,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 5,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Cook green paste 60-90 sec until aromatic.",
+      "Add coconut milk and water; simmer gently.",
+      "Add vegetables and cook until just tender.",
+      "Season with MSG, white pepper and stock powder.",
+      "Serve with rice; finish with scallion oil, chilli oil, sesame mix and lotus stem."
     ]
   },
   {
@@ -3963,6 +4497,18 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 10,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat oil in a pan.",
+      "Add Kashmiri chilli powder, Kashmiri chilli red paste and Sri Lankan red paste. Sauté until aromatic.",
+      "Add tamarind water and stir well.",
+      "Pour in coconut milk, stock water and water. Mix and bring to a simmer.",
+      "Season with MSG, salt, white pepper, stock powder and fresh Sri Lankan red curry powder mix.",
+      "Add tofu, carrot, mushroom and shimeji mushroom. Cook until vegetables are tender.",
+      "Add picked red paprika and slit onion. Simmer for 1-2 minutes.",
+      "Finish with red chilli oil.",
+      "Garnish with basil leaves and fried onion.",
+      "Serve hot."
     ]
   },
   {
@@ -4109,6 +4655,16 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 20,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat wok until smoking hot.",
+      "Add oil and aromatics.",
+      "Add selected vegetables.",
+      "Toss on high flame.",
+      "Add preferred sauce.",
+      "Cook until vegetables remain crisp tender.",
+      "Finish with garnish selection.",
+      "Serve immediately hot."
     ]
   },
   {
@@ -4175,6 +4731,15 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 0,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare filling: mix/chop chestnut with chillies and onion. Cook until aromatic.",
+      "Season with stock powder, MSG, white pepper, salt.",
+      "Add slurry; cook until mixture binds. Cool completely.",
+      "Fill wrappers with 18 g filling; pleat tightly.",
+      "Pan-fry gyoza in oil until base golden.",
+      "Add water, cover and steam 4–5 min.",
+      "Remove lid; re-crisp base 30–45 sec."
     ]
   },
   {
@@ -4366,6 +4931,16 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 2,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Cook stages 1→4 sequentially; dry the mix fully. Fold in pickled ginger and tempura flakes.",
+      "Fill gyoza skins with filling; pleat tightly (18 g filling per gyoza).",
+      "Heat non-stick pan; add oil. Place gyoza; pan-fry until base golden.",
+      "Add water, cover and steam for 4–5 minutes.",
+      "Remove lid; re-crisp base for 30–45 seconds.",
+      "Plate in a fan pattern.",
+      "Drizzle mustard mayo and soy-ketchup glaze.",
+      "Garnish with chilli, spring onion and sesame."
     ]
   },
   {
@@ -4417,6 +4992,12 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 4,
         "unit": "Piece"
       }
+    ],
+    "method": [
+      "Pulse edamame to coarse mince.",
+      "Mix with cream cheese, salt, pepper, truffle oil, truffle pate; add water to adjust texture.",
+      "Fill wrappers evenly and seal.",
+      "Steam 4–5 minutes until cooked."
     ]
   },
   {
@@ -4528,6 +5109,25 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 5,
         "unit": "Piece"
       }
+    ],
+    "method": [
+      "Sauté onion until translucent.",
+      "Add cabbage and carrot; cook on high flame until moisture evaporates.",
+      "Add spring onion and silken tofu.",
+      "Add salt, white pepper, MSG and stock powder.",
+      "Mix well and cook until dry.",
+      "Cool completely before shaping.",
+      "Place required filling in the center of each wrapper.",
+      "Pleat and seal properly.",
+      "Ensure no leakage and even shape.",
+      "Place momos in steamer.",
+      "Steam for 4–5 minutes until fully cooked.",
+      "Heat sauce base (prepared as per recipe) in a pan.",
+      "Simmer gently and adjust consistency.",
+      "Keep warm for service.",
+      "Spread hot sauce in serving plate or bowl.",
+      "Place steamed momos on top.",
+      "Serve hot immediately."
     ]
   },
   {
@@ -4674,6 +5274,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 0,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "PREPARE FILLING: Mix all filling ingredients thoroughly. Chill the filling for easy wrapping.",
+      "ASSEMBLE DUMPLINGS: Place required filling in the center of each wrapper. Seal edges tightly to form momos.",
+      "STEAM: Steam dumplings for 4-5 minutes until cooked.",
+      "PREPARE SAUCE: Blend or crush all sauce ingredients to a smooth paste. Heat in a pan and simmer. Adjust consistency and seasoning as required.",
+      "PLATE: Spread green sauce on the base of the plate. Place steamed dumplings on top.",
+      "GARNISH: Top with fried onion and pickled red Bhavnagri."
     ]
   },
   {
@@ -4755,6 +5363,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 4,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare filling: Mix all filling ingredients thoroughly. Refrigerate for 15-20 min for easier handling.",
+      "Make chilli oil dumplings paste: Blend all paste ingredients to a smooth, thick paste. Store in an airtight container.",
+      "Assemble dumplings: Place required filling in the center of each wrapper. Seal edges tightly to form dumplings.",
+      "Steam dumplings: Steam for 4-5 minutes until fully cooked.",
+      "Prepare sauce: Heat oil in a pan, add chilli paste and saute for 30 seconds. Add stock water, red chilli powder, salt, msg, stock powder and Sichuan powder. Stir well. Simmer for 2-3 minutes. Adjust seasoning.",
+      "Finish & plate: Spread hot sauce on serving plate. Place steamed dumplings on top. Garnish with toasted peanuts, white & green spring onion and fried glass noodles. Serve immediately."
     ]
   },
   {
@@ -4816,6 +5432,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 30,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Prepare Dumplings: Ensure all dim sums are prepared, sealed and ready to steam.",
+      "Steam Dumplings: Steam all dumplings for 4-5 minutes on medium heat until cooked.",
+      "Prepare Dips & Sauces: Portion dips and sauces as per the given gram weight in small bowls.",
+      "Assemble Platter: Arrange all dim sums in a bamboo steamer as shown. Place the dip bowls in the centre or alongside.",
+      "Serve: Serve hot immediately."
     ]
   },
   {
@@ -4892,6 +5515,26 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 3,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Cook sushi rice and season as per standard.",
+      "Cool to room temperature.",
+      "Slice avocado and cucumber into thin batons.",
+      "Keep cream cheese ready.",
+      "Place nori on bamboo mat, shiny side down.",
+      "Spread a thin, even layer of rice leaving 1 inch at the top.",
+      "Spread cream cheese in the centre.",
+      "Add cucumber and avocado.",
+      "Lift the mat and roll tightly from the bottom.",
+      "Seal the edge with a little water.",
+      "Brush roll with buffalo sauce.",
+      "Coat with black and white sesame seeds.",
+      "Use a sharp knife.",
+      "Cut into 8 equal pieces.",
+      "Clean the knife after each cut.",
+      "Top with thin avocado slices.",
+      "Add crispy rice paper piece.",
+      "Drizzle unagi sauce."
     ]
   },
   {
@@ -4968,6 +5611,26 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 3,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Cook sushi rice and season as per standard.",
+      "Cool to room temperature.",
+      "Slice red bell pepper into thin strips.",
+      "Trim and cut spring onion.",
+      "Ensure fried lotus stem is crisp and ready.",
+      "Keep cream cheese ready.",
+      "Place nori on bamboo mat, shiny side down.",
+      "Spread a thin, even layer of rice leaving 1 inch at the top.",
+      "Spread cream cheese in the centre.",
+      "Add red bell pepper, spring onion and fried lotus stem.",
+      "Lift the mat and roll tightly from the bottom.",
+      "Seal the edge with a little water.",
+      "Use a sharp knife.",
+      "Cut into 8 equal pieces.",
+      "Clean the knife after each cut.",
+      "Drizzle spicy mayo on top.",
+      "Spoon dragon sauce over mayo.",
+      "Ensure even topping on all pieces."
     ]
   },
   {
@@ -5049,6 +5712,26 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 2,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Cook sushi rice and season as per standard.",
+      "Cool to room temperature.",
+      "Slice red bell pepper and cucumber into thin strips.",
+      "Julienne carrot and spring onion.",
+      "Dice mango into small cubes.",
+      "Keep cream cheese ready.",
+      "Place nori on bamboo mat, shiny side down.",
+      "Spread a thin, even layer of rice leaving 1 inch at the top.",
+      "Spread cream cheese in the centre.",
+      "Add spring onion, carrot, red bell pepper, cucumber and mango.",
+      "Lift the mat and roll tightly from the bottom.",
+      "Seal the edge with a little water.",
+      "Use a sharp knife.",
+      "Cut into 8 equal pieces.",
+      "Clean the knife after each cut.",
+      "Add spicy mayo on top.",
+      "Sprinkle chilly crisps and oil.",
+      "Garnish with micro greens."
     ]
   },
   {
@@ -5105,6 +5788,25 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 1,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Cook sushi rice and season as per standard.",
+      "Allow rice to cool to room temperature.",
+      "Slice cucumber, carrot and pickled radish into thin strips.",
+      "Sauté spinach with soy sauce and garlic. Cool.",
+      "Cut tofu into strips and toss with soy sauce.",
+      "Slice unagi into strips.",
+      "Place nori sheet on bamboo mat, shiny side down.",
+      "Spread an even layer of rice leaving 1 inch gap at the top.",
+      "Arrange tofu, unagi, radish, cucumber, carrot and spinach horizontally.",
+      "Lift the mat and roll tightly from the bottom.",
+      "Press gently to form a firm roll.",
+      "Seal the edge with a little water.",
+      "Use a sharp knife.",
+      "Cut into 8 equal pieces.",
+      "Wipe blade after each cut.",
+      "Brush lightly with sesame oil.",
+      "Sprinkle sesame seeds if required."
     ]
   },
   {
@@ -5201,6 +5903,25 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 2,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Cook sushi rice and season as per standard.",
+      "Allow rice to cool to room temperature.",
+      "Finely slice spring onion, carrot, cucumber, red capsicum and jalapeño.",
+      "Chop coriander.",
+      "Keep cream cheese ready.",
+      "Place nori on bamboo mat, shiny side down.",
+      "Spread an even layer of rice leaving 1 inch gap at the top.",
+      "In the center add cream cheese, spring onion, carrot, cucumber, red capsicum, jalapeño and coriander.",
+      "Lift the mat and roll tightly from the bottom.",
+      "Press gently to form a firm roll.",
+      "Seal the edge with a little water.",
+      "Use a sharp knife.",
+      "Cut into 8 equal pieces.",
+      "Clean the knife after each cut.",
+      "Top each piece with salsa and tempura flex.",
+      "Drizzle sweet chilli sauce, unagi sauce and sriracha.",
+      "Serve with soy sauce, pickled ginger and wasabi."
     ]
   },
   {
@@ -5287,6 +6008,29 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 3,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Cook sushi rice and season as per standard.",
+      "Allow rice to cool to room temperature.",
+      "Slice jalapeño into thin rings.",
+      "Finely chop coriander and spring onion.",
+      "Cut raw mango into thin julienne strips.",
+      "Keep cream cheese ready.",
+      "Place nori on bamboo mat, shiny side down.",
+      "Spread an even layer of rice leaving 1 inch gap at the top.",
+      "In the center add cream cheese, jalapeño, raw mango, spring onion and coriander.",
+      "Lift the mat and roll tightly from the bottom.",
+      "Press gently to form a firm roll.",
+      "Seal the edge with a little water.",
+      "Roll in fried spring roll for extra crunch.",
+      "Spread a thin layer of cream cheese.",
+      "Coat the roll evenly with bread crumbs.",
+      "Heat oil to 180°C and flash fry until golden and crisp.",
+      "Drain on paper towel.",
+      "Drizzle unagi sauce and sriracha on top.",
+      "Garnish with coriander and sesame seeds.",
+      "Slice 8 equal pieces using a sharp knife.",
+      "Clean the knife after each cut."
     ]
   },
   {
@@ -5358,6 +6102,23 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 10,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Cook sushi rice and season as per standard.",
+      "Allow rice to cool to room temperature.",
+      "Drain corn well.",
+      "Batter corn with tempura flour and deep fry until golden and crisp.",
+      "Slice cucumber and purple cabbage into thin juilenne strips.",
+      "Finely chop spring onion.",
+      "Keep cream cheese ready.",
+      "Place nori on bamboo mat, shiny side down.",
+      "Spread an even layer of rice leaving 1 inch gap at the top.",
+      "In the center add cream cheese, cucumber, purple cabbage, spring onion and corn tempura.",
+      "Roll tightly using mat, applying even pressure.",
+      "Moisten knife and slice into 8 equal pieces.",
+      "Clean knife after each cut.",
+      "Drizzle sriracha on top.",
+      "Serve with pickled ginger, wasabi and soy sauce."
     ]
   },
   {
@@ -5429,6 +6190,15 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 4,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat wok on high heat until smoking.",
+      "Add oil, then ginger; sauté for 10–15 sec.",
+      "Add carrot, corn, edamame; toss for 60–90 sec.",
+      "Add cooked rice; toss until steamy hot.",
+      "Add stock powder, salt, white pepper, MSG; toss.",
+      "Add light soy; toss evenly.",
+      "Add spring onion; toss and plate immediately."
     ]
   },
   {
@@ -5500,6 +6270,15 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 4,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat wok on medium-high until hot.",
+      "Add oil, then garlic; sauté on medium until pale golden (do not burn).",
+      "Increase heat; add broccoli, baby corn and spinach; toss 60–90 sec.",
+      "Add cooked rice; toss on high heat until heated through.",
+      "Add stock powder, salt, white pepper and MSG; toss evenly.",
+      "Add light soy; toss evenly.",
+      "Plate and top with fried garlic and spring onion."
     ]
   },
   {
@@ -5566,6 +6345,15 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 2.5,
         "unit": "ML"
       }
+    ],
+    "method": [
+      "Heat wok on high until smoking.",
+      "Add oil and garlic; sauté for 10 sec until aromatic.",
+      "Add mushrooms; cook until moisture evaporates and mushrooms brown.",
+      "Add chili bean paste, oyster sauce and hot sauce; toss for 15-20 sec.",
+      "Add rice and edamame; toss on high heat until rice is hot and everything combined.",
+      "Add white pepper, truffle pâté and MSG; toss evenly.",
+      "Switch off heat; fold in truffle oil. Plate and serve immediately."
     ]
   },
   {
@@ -5637,6 +6425,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 4,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat wok high until smoking.",
+      "Add oil and ginger-garlic; sauté 10-15 sec.",
+      "Add vegetables; toss 60-90 sec (keep crunchy).",
+      "Add noodles; toss to separate strands.",
+      "Add hakka sauce + stock powder, salt, white pepper, MSG; toss on high heat.",
+      "Finish spring onion; plate immediately."
     ]
   },
   {
@@ -5693,6 +6489,15 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 5,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat wok high until smoking.",
+      "Add oil and garlic + chilli; sauté 10–15 sec.",
+      "Add mushrooms; toss until lightly browned.",
+      "Add spring onion whites; stir-fry briefly.",
+      "Add noodles + drunken sauce; toss until glossy.",
+      "Add bean sprouts + basil; toss 20–30 sec.",
+      "Plate immediately."
     ]
   },
   {
@@ -5759,6 +6564,15 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 1,
         "unit": "Piece"
       }
+    ],
+    "method": [
+      "Heat wok medium-high; add oil.",
+      "Add ginger-garlic; sauté 10 sec.",
+      "Add mushrooms and carrot; toss 60 sec.",
+      "Add noodles and pad thai sauce; toss until absorbed.",
+      "Add sprouts; toss 15–20 sec.",
+      "Plate and finish with spring onion, peanuts and coriander.",
+      "Serve with lemon wedge."
     ]
   },
   {
@@ -5840,6 +6654,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 2,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Bring stock + dashi to gentle simmer.",
+      "Add shoyu tare + seasoning; simmer 3-4 min (no hard boil).",
+      "Cook noodles separately; drain well.",
+      "Place noodles in bowl; pour hot broth.",
+      "Top vegetables; finish sesame + scallion oil."
     ]
   },
   {
@@ -5921,6 +6742,14 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 10,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Heat oil; sauté ginger + garlic.",
+      "Add gochujang + chilli bean paste + chilli powder; bloom 30–40 sec.",
+      "Add water gradually; whisk smooth.",
+      "Add peanut butter; whisk until emulsified.",
+      "Season; simmer 2–3 min.",
+      "Cook noodles separately; assemble bowl."
     ]
   },
   {
@@ -6037,6 +6866,17 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 1,
         "unit": "Piece"
       }
+    ],
+    "method": [
+      "Heat oil in a pot over medium heat; add ginger and garlic paste, sauté until aromatic.",
+      "Add gochujang, chilli bean paste and chilli powder; bloom for 30–40 sec.",
+      "Gradually add water while whisking to avoid lumps.",
+      "Add peanut butter and whisk continuously until fully emulsified.",
+      "Season with stock powder, MSG, white pepper, salt and caster sugar. Simmer for 2–3 min.",
+      "Cook ramen noodles separately as per instructions; drain well.",
+      "Assemble the bowl with noodles and hot broth.",
+      "Top with peanuts, coriander, spring onion, edamame and pokchoy.",
+      "Drizzle with chilli oil and serve with lemon wedge."
     ]
   },
   {
@@ -6098,6 +6938,13 @@ export const COOKBOOK_RECIPES: CookbookRecipe[] = [
         "qty": 5,
         "unit": "Gram"
       }
+    ],
+    "method": [
+      "Melt butter on low heat.",
+      "Add garlic + chilli; cook gently until aromatic.",
+      "Add chilli crisp + seasoning; whisk with 10–15 ml hot water to emulsify.",
+      "Add noodles; toss until glossy and coated.",
+      "Plate; top with spring onion and fried garlic."
     ]
   }
 ];

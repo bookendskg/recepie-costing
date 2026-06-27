@@ -388,9 +388,22 @@ export function RecipeDetailPage() {
               </TabsContent>
 
               <TabsContent value="method">
-                <p className="whitespace-pre-wrap py-2 text-sm text-muted-foreground">
-                  {recipe.description?.trim() || "No preparation method recorded for this recipe."}
-                </p>
+                {recipe.method && recipe.method.length > 0 ? (
+                  <ol className="space-y-2.5 py-2">
+                    {recipe.method.map((step, i) => (
+                      <li key={i} className="flex gap-3 text-sm">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                          {i + 1}
+                        </span>
+                        <span className="pt-0.5">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="whitespace-pre-wrap py-2 text-sm text-muted-foreground">
+                    {recipe.description?.trim() || "No preparation method recorded for this recipe."}
+                  </p>
+                )}
               </TabsContent>
 
               {showFinancials && (

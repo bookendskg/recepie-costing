@@ -15,6 +15,7 @@ export interface RecipeHeaderInput {
   category: string;
   brand: Brand;
   description?: string | null;
+  method?: string[];
   preparation_time?: number | null;
   serving_size: number;
   selling_price?: number | null;
@@ -137,6 +138,7 @@ export const recipesRepo = {
           category: header.category,
           brand: header.brand,
           description: header.description ?? null,
+          method: header.method ?? [],
           image_url: null,
           preparation_time: header.preparation_time ?? null,
           serving_size: header.serving_size,
@@ -202,6 +204,7 @@ export const recipesRepo = {
         recipe.packaging_cost = header.packaging_cost ?? 0;
         recipe.wastage_pct = header.wastage_pct ?? 0;
         recipe.description = header.description ?? null;
+        recipe.method = header.method ?? [];
         recipe.preparation_time = header.preparation_time ?? null;
         recipe.serving_size = header.serving_size;
         if (header.is_prep !== undefined) recipe.is_prep = header.is_prep;

@@ -80,6 +80,7 @@ export function RecipeEditorPage() {
   const prepsById = useMemo(() => new Map<string, Recipe>(allRecipes.map((r) => [r.id, r])), [allRecipes]);
 
   const [lines, setLines] = useState<GridLine[]>([]);
+  const [method, setMethod] = useState("");
   const [submitOpen, setSubmitOpen] = useState(false);
   const [submitNote, setSubmitNote] = useState("");
   const [pendingRecipeId, setPendingRecipeId] = useState<string | null>(null);
@@ -114,6 +115,7 @@ export function RecipeEditorPage() {
         packaging_cost: existing.recipe.packaging_cost ?? 0,
         wastage_pct: existing.recipe.wastage_pct,
       });
+      setMethod((existing.recipe.method ?? []).join("\n"));
       setLines(
         existing.ingredients.map((i) => ({
           key: newKey(),
@@ -192,7 +194,11 @@ export function RecipeEditorPage() {
 
   // Preserve prep status on edit; honour the "New Prep" entry point on create.
   const effectiveIsPrep = isEdit ? existing?.recipe.is_prep ?? false : newPrep;
-  const withPrep = (h: RecipeHeaderValues) => ({ ...h, is_prep: effectiveIsPrep });
+  const withPrep = (h: RecipeHeaderValues) => ({
+    ...h,
+    is_prep: effectiveIsPrep,
+    method: method.split("\n").map((s) => s.trim()).filter(Boolean),
+  });
 
   const saveDraft = handleSubmit(async (h) => {
     const header = withPrep(h);
@@ -373,6 +379,16 @@ export function RecipeEditorPage() {
             <div className="space-y-1.5">
               <Label>Description</Label>
               <Textarea rows={2} {...register("description")} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Method</Label>
+              <Textarea
+                rows={6}
+                value={method}
+                onChange={(e) => setMethod(e.target.value)}
+                placeholder="One step per line…"
+              />
+              <p className="text-xs text-muted-foreground">Preparation steps — one per line; shown as a numbered list.</p>
             </div>
           </Card>
 

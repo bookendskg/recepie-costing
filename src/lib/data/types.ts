@@ -141,6 +141,8 @@ export interface Recipe {
   category: string;
   brand: Brand;
   description: string | null;
+  /** Ordered preparation/cooking steps (from the cookbook METHOD section). */
+  method: string[];
   /** Recipe photo as a data URL (mock) or external URL. */
   image_url: string | null;
   preparation_time: number | null;
