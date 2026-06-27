@@ -5,8 +5,27 @@
 
 import { calculateCostPerBaseUnit, prepUnitCostFrom } from "../costing";
 import { computeYield } from "../yield";
+import { COOKBOOK_RECIPES } from "./cookbook";
 import type { MockDb } from "./mock/db";
 import type { Brand, IngredientYield, RawMaterial, Recipe, RecipeIngredient, User } from "./types";
+
+/** Light keyword classifier for cookbook-derived ingredients (display only). */
+function inferCategory(name: string): string {
+  const n = name.toLowerCase();
+  const has = (...w: string[]) => w.some((x) => n.includes(x));
+  if (n.includes("bell") || n.includes("capsicum")) return "Vegetables";
+  if (has("oil")) return "Oils & Fats";
+  if (has("cheese", "cream", "butter", "milk", "mozzarella", "parmesan", "burrata", "ricotta", "mascarpone", "yogurt", "yoghurt", "paneer")) return "Dairy";
+  if (has("black pepper", "white pepper", "peppercorn", "salt", "chilli", "chili", "spice", "powder", "cumin", "turmeric", "paprika", "oregano", "thyme", "cinnamon", "masala", "cardamom", "clove", "fennel", "fenugreek", "sesame", "seasoning", "msg")) return "Spices";
+  if (has("sauce", "mayo", "ketchup", "vinegar", "paste", "syrup", "honey", "soy", "dressing", "vinaigrette", "pesto", "ponzu", "gochujang", "dashi", "mirin", "glaze")) return "Sauces & Condiments";
+  if (has("flour", "pasta", "noodle", "bread", "dough", "panko", "crumb", "maida", "semolina", "spaghetti", "bucatini", "fettuccine", "linguini", "rice", "macaroni", "conchiglioni", "sheet", "bagel")) return "Grains & Flour";
+  if (has("chicken", "prawn", "shrimp", "fish", "tofu", "egg", "lamb", "beef", "pork", "bacon", "crab", "squid", "octopus", "salmon", "tuna")) return "Protein";
+  if (has("strawberry", "mango", "lemon", "lime", "grapefruit", "persimmon", "apple", "banana", "fruit", "berry", "orange", "pineapple", "grape", "melon")) return "Fruits";
+  if (has("onion", "garlic", "tomato", "mushroom", "carrot", "beetroot", "lettuce", "basil", "spinach", "cabbage", "arugula", "romaine", "iceberg", "sprout", "corn", "potato", "pepper", "cucumber", "ginger", "parsley", "coriander", "scallion", "leek", "lotus", "choy")) return "Vegetables";
+  if (has("sugar", "chocolate", "cocoa", "vanilla", "almond", "hazelnut", "pine nut", "pistachio", "nut", "caramel", "granola")) return "Bakery";
+  if (has("water", "ice", "juice", "tea", "soda", "cola")) return "Beverages";
+  return "Other";
+}
 
 const SEED_TS = "2026-06-01T09:00:00.000Z";
 const round2 = (n: number) => parseFloat(n.toFixed(2));
@@ -309,6 +328,89 @@ for (const d of allDefs) {
     updated_at: SEED_TS,
     updated_by: d.approvedBy ?? d.createdBy,
   });
+}
+
+// --- Cookbook menu (Capiche & Aiko) ----------------------------------------
+// Full dish catalogue extracted from the cookbook PDFs (see cookbook.ts). Names
+// and net quantities only — ingredients are created as UNPRICED raw materials so
+// nothing is costed until real prices are entered, at which point the normal
+// recompute fills in making cost / FC%. Ingredients are de-duped by name against
+// the priced seed materials so shared items (onion, garlic…) are reused.
+{
+  const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+  const matByName = new Map(raw_materials.map((m) => [norm(m.ingredient_name), m.id]));
+  const existingRecipeNames = new Set(recipes.map((r) => norm(r.recipe_name)));
+  const usedMatIds = new Set(raw_materials.map((m) => m.id));
+  const slugify = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+  for (const cb of COOKBOOK_RECIPES) {
+    if (existingRecipeNames.has(norm(cb.name))) continue; // never duplicate a seeded dish
+    let totalGrams = 0;
+    cb.ingredients.forEach((ing, idx) => {
+      let matId = matByName.get(norm(ing.name));
+      if (!matId) {
+        let id = "m-cb-" + slugify(ing.name);
+        while (usedMatIds.has(id)) id += "-x";
+        usedMatIds.add(id);
+        matId = id;
+        matByName.set(norm(ing.name), id);
+        raw_materials.push({
+          id,
+          ingredient_name: ing.name,
+          category: inferCategory(ing.name),
+          supplier_name: null,
+          notes: null,
+          purchase_price: null,
+          purchase_quantity: 1,
+          purchase_unit: ing.unit,
+          base_unit: ing.unit,
+          cost_per_base_unit: null,
+          last_price_update: null,
+          status: "active",
+          created_by: U_ADMIN,
+          created_at: SEED_TS,
+        });
+      }
+      recipe_ingredients.push({
+        id: `${cb.id}-i${idx}`,
+        recipe_id: cb.id,
+        ingredient_id: matId,
+        component_type: "material",
+        quantity_used: ing.qty,
+        unit_used: ing.unit,
+        calculated_cost: null,
+        sort_order: idx,
+      });
+      if (ing.unit === "Gram") totalGrams += ing.qty;
+    });
+    recipes.push({
+      id: cb.id,
+      recipe_name: cb.name,
+      category: cb.category,
+      brand: cb.brand,
+      description: null,
+      image_url: null,
+      preparation_time: null,
+      serving_size: cb.serving_size,
+      status: "approved",
+      selling_price: null,
+      packaging_cost: 0,
+      total_cost: null,
+      cost_per_portion: null,
+      wastage_pct: WASTAGE_PCT,
+      is_prep: false,
+      yield_quantity: cb.yield_grams > 0 ? cb.yield_grams : round2(totalGrams),
+      yield_unit: "Gram",
+      created_by: U_EDITOR,
+      approved_by: U_ADMIN,
+      approved_at: "2026-06-20T09:30:00.000Z",
+      rejection_note: null,
+      version_no: 1,
+      created_at: SEED_TS,
+      updated_at: SEED_TS,
+      updated_by: U_ADMIN,
+    });
+  }
 }
 
 /** A seeded yield record for a 1 kg purchase at the given cost and wastage %. */

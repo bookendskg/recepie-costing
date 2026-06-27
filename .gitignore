@@ -9,3 +9,6 @@ dist-ssr
 playwright-report
 test-results
 coverage
+
+# Large source cookbook PDFs (extracted into src/lib/data/cookbook.ts)
+assets/*.pdf
