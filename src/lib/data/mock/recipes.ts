@@ -7,8 +7,21 @@ import type {
   RecipeIngredientWithMaterial,
   RecipeVersion,
 } from "../types";
+import type { ImportSummary } from "../../import/importTypes";
 import { delay, getDb, type MockDb, mutate, nowISO, uid } from "./db";
 import { findMaterial, recomputeAndPropagate, recordAudit } from "./recompute";
+
+/** One row of a recipe import (§37) — one ingredient line; many rows per recipe. */
+export interface ImportRecipeLine {
+  recipe_name: string;
+  category: string;
+  size: "11_INCH" | "15_INCH" | null;
+  ingredient_name: string;
+  quantity: number;
+  unit: string;
+  selling_price: number | null;
+  packaging_cost: number | null;
+}
 
 export interface RecipeHeaderInput {
   recipe_name: string;
@@ -234,6 +247,133 @@ export const recipesRepo = {
             : `Edited "${recipe.recipe_name}"`,
         });
         return recipe;
+      }),
+    );
+  },
+
+  /**
+   * Bulk recipe import (§37). Rows are grouped by recipe name; rows carrying a
+   * Size build a pizza master (15-inch) + an 11-inch variant, otherwise a single
+   * recipe. Missing ingredients are created as UNPRICED materials. Costs recompute
+   * from priced ingredients afterwards.
+   */
+  async importRecipes(
+    mode: "add" | "update" | "upsert",
+    rows: ImportRecipeLine[],
+    actorId: string,
+  ): Promise<ImportSummary> {
+    return delay(
+      mutate((db) => {
+        const S: ImportSummary = { total: 0, imported: 0, updated: 0, skipped: 0, failed: 0, errors: [] };
+        const matByName = new Map(db.raw_materials.map((m) => [m.ingredient_name.toLowerCase(), m]));
+        const ensureMat = (name: string): string => {
+          const key = name.toLowerCase();
+          const found = matByName.get(key);
+          if (found) return found.id;
+          const m = {
+            id: uid(), ingredient_name: name, category: "Other", supplier_name: null, notes: null,
+            purchase_price: null, purchase_quantity: 1, purchase_unit: "Gram", base_unit: "Gram",
+            cost_per_base_unit: null, last_price_update: null, status: "active" as const,
+            created_by: actorId, created_at: nowISO(),
+          };
+          db.raw_materials.push(m);
+          matByName.set(key, m);
+          return m.id;
+        };
+        const writeRows = (recipeId: string, ls: ImportRecipeLine[]) => {
+          db.recipe_ingredients = db.recipe_ingredients.filter((ri) => ri.recipe_id !== recipeId);
+          ls.forEach((l, idx) =>
+            db.recipe_ingredients.push({
+              id: uid(), recipe_id: recipeId, ingredient_id: ensureMat(l.ingredient_name),
+              component_type: "material", quantity_used: l.quantity, unit_used: l.unit,
+              calculated_cost: null, sort_order: idx,
+            }),
+          );
+        };
+        const recomputeIds: string[] = [];
+        const upsert = (
+          name: string, category: string, sizeCode: "11_INCH" | "15_INCH" | null,
+          parentId: string | null, ls: ImportRecipeLine[],
+        ): { id: string | null; action: "added" | "updated" | "skipped" } => {
+          const existing = db.recipes.find(
+            (r) => r.recipe_name.toLowerCase() === name.toLowerCase() && (r.size_code ?? null) === sizeCode,
+          );
+          const selling = ls.find((l) => l.selling_price != null)?.selling_price ?? null;
+          const pkg = ls.find((l) => l.packaging_cost != null)?.packaging_cost ?? null;
+          if (existing) {
+            if (mode === "add") return { id: existing.id, action: "skipped" };
+            writeRows(existing.id, ls);
+            existing.category = category;
+            if (selling != null) existing.selling_price = selling;
+            if (pkg != null) existing.packaging_cost = pkg;
+            existing.updated_at = nowISO();
+            existing.updated_by = actorId;
+            recomputeIds.push(existing.id);
+            return { id: existing.id, action: "updated" };
+          }
+          if (mode === "update") return { id: null, action: "skipped" };
+          const id = uid();
+          db.recipes.push({
+            id, recipe_name: name, category, brand: "capiche", description: null, method: [],
+            parent_recipe_id: parentId, size_code: sizeCode,
+            size_label: sizeCode === "11_INCH" ? "11-inch" : sizeCode === "15_INCH" ? "15-inch" : null,
+            image_url: null, preparation_time: null, serving_size: 1, status: "draft",
+            selling_price: selling, packaging_cost: pkg ?? 0, total_cost: 0, cost_per_portion: 0,
+            wastage_pct: 5, is_prep: false, yield_quantity: 0, yield_unit: "Gram",
+            created_by: actorId, approved_by: null, approved_at: null, rejection_note: null,
+            version_no: 1, created_at: nowISO(), updated_at: nowISO(), updated_by: actorId,
+          });
+          writeRows(id, ls);
+          recomputeIds.push(id);
+          return { id, action: "added" };
+        };
+        const tally = (a: "added" | "updated" | "skipped") => {
+          if (a === "added") S.imported++;
+          else if (a === "updated") S.updated++;
+          else S.skipped++;
+        };
+
+        const groups = new Map<string, ImportRecipeLine[]>();
+        for (const l of rows) {
+          const k = l.recipe_name.trim().toLowerCase();
+          const arr = groups.get(k);
+          if (arr) arr.push(l);
+          else groups.set(k, [l]);
+        }
+        for (const glines of groups.values()) {
+          try {
+            const name = glines[0].recipe_name.trim();
+            const category = glines[0].category || "Uncategorised";
+            if (glines.some((l) => l.size)) {
+              const fifteen = glines.filter((l) => l.size === "15_INCH");
+              const eleven = glines.filter((l) => l.size === "11_INCH");
+              let masterId: string | null = null;
+              if (fifteen.length) {
+                const r = upsert(name, category, "15_INCH", null, fifteen);
+                masterId = r.id;
+                tally(r.action);
+              }
+              if (eleven.length) {
+                const mId = masterId ?? db.recipes.find((r) => r.recipe_name.toLowerCase() === name.toLowerCase() && !r.parent_recipe_id)?.id ?? null;
+                const r = upsert(name, category, "11_INCH", mId, eleven);
+                tally(r.action);
+              }
+            } else {
+              tally(upsert(name, category, null, null, glines).action);
+            }
+          } catch (e) {
+            S.failed++;
+            S.errors.push({ row: 0, message: `${glines[0]?.recipe_name}: ${e instanceof Error ? e.message : "failed"}` });
+          }
+        }
+        recomputeAndPropagate(db, [...new Set(recomputeIds)], actorId, "Recipe import");
+        S.total = S.imported + S.updated + S.skipped + S.failed;
+        recordAudit(db, {
+          entity_type: "recipe", entity_id: "import", action: "create",
+          new_values: { added: S.imported, updated: S.updated },
+          performed_by: actorId, notes: `Imported recipes — ${S.imported} added, ${S.updated} updated`,
+        });
+        return S;
       }),
     );
   },

@@ -19,6 +19,7 @@ export { recipesRepo } from "./mock/recipes";
 export type {
   RecipeHeaderInput,
   RecipeLineInput,
+  ImportRecipeLine,
 } from "./mock/recipes";
 
 export { viewsRepo, settingsRepo, auditRepo } from "./mock/misc";
