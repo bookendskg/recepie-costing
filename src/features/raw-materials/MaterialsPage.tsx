@@ -10,8 +10,14 @@ import {
   Plus,
   RotateCcw,
   Trash2,
+  Upload,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/PageHeader";
+import { ImportDialog } from "@/components/ImportDialog";
+import { materialsRepo, type MaterialInput } from "@/lib/data";
+import { PURCHASE_UNITS, BASE_UNITS } from "@/lib/units";
+import { pick, toNum, toText, type ImportConfig } from "@/lib/import/importTypes";
 import { EmptyState } from "@/components/EmptyState";
 import { TableSkeleton } from "@/components/TableSkeleton";
 import { Pagination } from "@/components/Pagination";
@@ -74,6 +80,63 @@ export function MaterialsPage() {
   const { data: categories = [] } = useCategories();
   const setStatus = useSetMaterialStatus();
   const bulkStatus = useBulkSetMaterialStatus();
+  const queryClient = useQueryClient();
+  const [importOpen, setImportOpen] = useState(false);
+
+  const importConfig = useMemo<ImportConfig<MaterialInput>>(() => ({
+    title: "Import Ingredients",
+    columns: [
+      { label: "Ingredient", required: true },
+      { label: "Category" },
+      { label: "Supplier" },
+      { label: "Purchase Price" },
+      { label: "Purchase Quantity" },
+      { label: "Purchase Unit" },
+      { label: "Base Unit" },
+      { label: "Notes" },
+    ],
+    sample: {
+      Ingredient: "Onion",
+      Category: "Vegetables",
+      Supplier: "",
+      "Purchase Price": 2400,
+      "Purchase Quantity": 20,
+      "Purchase Unit": "KG",
+      "Base Unit": "Gram",
+      Notes: "",
+    },
+    parseRow: (row, n) => {
+      const name = toText(pick(row, ["Ingredient", "Ingredient Name", "Name"]));
+      if (!name) return { error: `Row ${n}: ingredient name is required` };
+      const price = toNum(pick(row, ["Purchase Price", "Purchase Price (₹)", "Price"]));
+      if (price !== null && (Number.isNaN(price) || price < 0)) return { error: `Row ${n}: invalid purchase price` };
+      const qtyRaw = toNum(pick(row, ["Purchase Quantity", "Pack Size", "Quantity"]));
+      const qty = qtyRaw == null || Number.isNaN(qtyRaw) ? 1 : qtyRaw;
+      if (qty <= 0) return { error: `Row ${n}: purchase quantity must be greater than 0` };
+      const purchaseUnit = toText(pick(row, ["Purchase Unit", "Unit"])) || "KG";
+      if (!(PURCHASE_UNITS as readonly string[]).includes(purchaseUnit)) return { error: `Row ${n}: unknown purchase unit "${purchaseUnit}"` };
+      const baseUnit = toText(pick(row, ["Base Unit"])) || "Gram";
+      if (!(BASE_UNITS as readonly string[]).includes(baseUnit)) return { error: `Row ${n}: unknown base unit "${baseUnit}"` };
+      return {
+        value: {
+          ingredient_name: name,
+          category: toText(pick(row, ["Category"])) || "Other",
+          supplier_name: toText(pick(row, ["Supplier", "Supplier Name"])) || null,
+          notes: toText(pick(row, ["Notes"])) || null,
+          purchase_price: price,
+          purchase_quantity: qty,
+          purchase_unit: purchaseUnit,
+          base_unit: baseUnit,
+        },
+      };
+    },
+    run: async (mode, rows) => {
+      const summary = await materialsRepo.importMaterials(mode, rows, user.id);
+      await queryClient.invalidateQueries({ queryKey: ["materials"] });
+      await queryClient.invalidateQueries({ queryKey: ["recipes"] });
+      return summary;
+    },
+  }), [queryClient, user.id]);
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
@@ -245,6 +308,11 @@ export function MaterialsPage() {
             <Button variant="outline" onClick={doExport}>
               <Download className="h-4 w-4" /> Export
             </Button>
+            {canEdit && (
+              <Button variant="outline" onClick={() => setImportOpen(true)}>
+                <Upload className="h-4 w-4" /> Import
+              </Button>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
@@ -451,6 +519,7 @@ export function MaterialsPage() {
       </Card>
 
       <MaterialForm open={formOpen} onOpenChange={setFormOpen} material={editing} />
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} config={importConfig} />
       <PriceHistoryDialog
         material={historyFor}
         open={!!historyFor}

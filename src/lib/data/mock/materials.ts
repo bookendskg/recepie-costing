@@ -1,5 +1,6 @@
 import { calculateCostPerBaseUnit } from "../../costing";
 import type { IngredientPriceHistory, RawMaterial } from "../types";
+import type { ImportSummary } from "../../import/importTypes";
 import { delay, getDb, mutate, nowISO, todayISO, uid } from "./db";
 import { cascadeFromMaterial, recordAudit } from "./recompute";
 
@@ -139,6 +140,75 @@ export const materialsRepo = {
             : `Updated ${m.ingredient_name}`,
         });
         return m;
+      }),
+    );
+  },
+
+  /** Bulk import (§35): upsert ingredients by name, then cascade prices to recipes. */
+  async importMaterials(
+    mode: "add" | "update" | "upsert",
+    rows: MaterialInput[],
+    actorId: string,
+  ): Promise<ImportSummary> {
+    return delay(
+      mutate((db) => {
+        const summary: ImportSummary = { total: rows.length, imported: 0, updated: 0, skipped: 0, failed: 0, errors: [] };
+        const byName = new Map(db.raw_materials.map((m) => [m.ingredient_name.toLowerCase(), m]));
+        const changed = new Set<string>();
+        rows.forEach((input, i) => {
+          try {
+            const existing = byName.get(input.ingredient_name.toLowerCase());
+            if (existing) {
+              if (mode === "add") { summary.skipped++; return; }
+              existing.category = input.category || existing.category;
+              existing.supplier_name = input.supplier_name ?? existing.supplier_name;
+              existing.notes = input.notes ?? existing.notes;
+              existing.purchase_price = input.purchase_price;
+              existing.purchase_quantity = input.purchase_quantity;
+              existing.purchase_unit = input.purchase_unit;
+              existing.base_unit = input.base_unit;
+              existing.cost_per_base_unit = computeCpu(input);
+              existing.last_price_update = input.purchase_price === null ? existing.last_price_update : todayISO();
+              changed.add(existing.id);
+              summary.updated++;
+            } else {
+              if (mode === "update") { summary.skipped++; return; }
+              const material: RawMaterial = {
+                id: uid(),
+                ingredient_name: input.ingredient_name,
+                category: input.category,
+                supplier_name: input.supplier_name ?? null,
+                notes: input.notes ?? null,
+                purchase_price: input.purchase_price,
+                purchase_quantity: input.purchase_quantity,
+                purchase_unit: input.purchase_unit,
+                base_unit: input.base_unit,
+                cost_per_base_unit: computeCpu(input),
+                last_price_update: input.purchase_price === null ? null : todayISO(),
+                status: "active",
+                created_by: actorId,
+                created_at: nowISO(),
+              };
+              db.raw_materials.push(material);
+              byName.set(material.ingredient_name.toLowerCase(), material);
+              changed.add(material.id);
+              summary.imported++;
+            }
+          } catch (e) {
+            summary.failed++;
+            summary.errors.push({ row: i + 2, message: e instanceof Error ? e.message : "Failed" });
+          }
+        });
+        for (const id of changed) cascadeFromMaterial(db, id, actorId, "Ingredient import");
+        recordAudit(db, {
+          entity_type: "ingredient",
+          entity_id: "import",
+          action: "update",
+          new_values: { added: summary.imported, updated: summary.updated },
+          performed_by: actorId,
+          notes: `Imported ingredients — ${summary.imported} added, ${summary.updated} updated`,
+        });
+        return summary;
       }),
     );
   },
