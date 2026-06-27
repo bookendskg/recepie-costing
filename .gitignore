@@ -12,3 +12,4 @@ coverage
 
 # Large source cookbook PDFs (extracted into src/lib/data/cookbook.ts)
 assets/*.pdf
+assets/*.xlsx

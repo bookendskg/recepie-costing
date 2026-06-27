@@ -6,8 +6,36 @@
 import { calculateCostPerBaseUnit, prepUnitCostFrom } from "../costing";
 import { computeYield } from "../yield";
 import { COOKBOOK_RECIPES } from "./cookbook";
+import { MASTER_PRICES } from "./masterPrices";
+import { MASTER_DISH_COSTS } from "./masterDishCosts";
 import type { MockDb } from "./mock/db";
 import type { Brand, IngredientYield, RawMaterial, Recipe, RecipeIngredient, User } from "./types";
+
+/** ₹ per gram for an ingredient from the master costing book (the only price
+ *  source), matched by normalised name. Undefined when the book has no price. */
+const priceNorm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+const masterPerGram = (name: string): number | undefined => MASTER_PRICES[priceNorm(name)];
+
+/** Per-dish making/packaging/selling from the master "…2026" summary sheets,
+ *  matched to a recipe name (exact key, then a contains-based fuzzy fallback). */
+const dishKey = (s: string) =>
+  priceNorm(s)
+    .replace(/\(\d+\s*pcs?\)/g, "")
+    .replace(/\bnew\b/g, "")
+    .replace(/\b(pizza|pasta|salad|dimsum)\b/g, "")
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+const DISH_KEYS = Object.keys(MASTER_DISH_COSTS);
+const dishCostFor = (name: string): (typeof MASTER_DISH_COSTS)[string] | null => {
+  const k = dishKey(name);
+  if (MASTER_DISH_COSTS[k]) return MASTER_DISH_COSTS[k];
+  if (k.length >= 5) {
+    const f = DISH_KEYS.find((dk) => dk.length >= 5 && (dk.includes(k) || k.includes(dk)));
+    if (f) return MASTER_DISH_COSTS[f];
+  }
+  return null;
+};
 
 /** Light keyword classifier for cookbook-derived ingredients (display only). */
 function inferCategory(name: string): string {
@@ -142,8 +170,11 @@ const matDefs: MatDef[] = [
   { id: "m-stock-water", name: "Stock Water", category: "Beverages", perGram: 0.09 },
 ];
 
+// Price every leaf material from the master costing book where it lists one;
+// fall back to the curated seed price only when the book has no entry.
+const matEffPerGram = (d: MatDef) => masterPerGram(d.name) ?? d.perGram;
 const raw_materials: RawMaterial[] = matDefs.map((d) => {
-  const pricePerKg = round2(d.perGram * 1000);
+  const pricePerKg = round2(matEffPerGram(d) * 1000);
   return {
     id: d.id,
     ingredient_name: d.name,
@@ -161,7 +192,7 @@ const raw_materials: RawMaterial[] = matDefs.map((d) => {
     created_at: SEED_TS,
   } satisfies RawMaterial;
 });
-const matPerGram = new Map(matDefs.map((d) => [d.id, d.perGram]));
+const matPerGram = new Map(matDefs.map((d) => [d.id, matEffPerGram(d)]));
 
 // --- Recipe definitions (preps + menus) ------------------------------------
 type LineRef = { m: string; g: number } | { r: string; g: number };
@@ -331,21 +362,25 @@ for (const d of allDefs) {
 }
 
 // --- Cookbook menu (Capiche & Aiko) ----------------------------------------
-// Full dish catalogue extracted from the cookbook PDFs (see cookbook.ts). Names
-// and net quantities only — ingredients are created as UNPRICED raw materials so
-// nothing is costed until real prices are entered, at which point the normal
-// recompute fills in making cost / FC%. Ingredients are de-duped by name against
-// the priced seed materials so shared items (onion, garlic…) are reused.
+// Full dish catalogue extracted from the cookbook PDFs (see cookbook.ts). Each
+// ingredient is priced from the master costing book where it lists one (the only
+// price source); unlisted ingredients stay unpriced and don't contribute to the
+// making cost. Shared items are de-duped by name against the seed materials.
+// Recipes carry no selling price yet, so FC% appears once a selling price is set.
 {
   const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
   const matByName = new Map(raw_materials.map((m) => [norm(m.ingredient_name), m.id]));
+  const cpbuById = new Map(raw_materials.map((m) => [m.id, m.cost_per_base_unit]));
   const existingRecipeNames = new Set(recipes.map((r) => norm(r.recipe_name)));
   const usedMatIds = new Set(raw_materials.map((m) => m.id));
   const slugify = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const purchaseUnitFor = (base: string) => (base === "Gram" ? "KG" : base === "ML" ? "Litre" : "Piece");
 
   for (const cb of COOKBOOK_RECIPES) {
     if (existingRecipeNames.has(norm(cb.name))) continue; // never duplicate a seeded dish
     let totalGrams = 0;
+    let rawCost = 0;
+    let anyPriced = false;
     cb.ingredients.forEach((ing, idx) => {
       let matId = matByName.get(norm(ing.name));
       if (!matId) {
@@ -354,22 +389,31 @@ for (const d of allDefs) {
         usedMatIds.add(id);
         matId = id;
         matByName.set(norm(ing.name), id);
+        const pg = masterPerGram(ing.name); // ₹ per base unit (the book costs per-gram)
+        const cpbu = pg ?? null;
+        cpbuById.set(id, cpbu);
         raw_materials.push({
           id,
           ingredient_name: ing.name,
           category: inferCategory(ing.name),
           supplier_name: null,
           notes: null,
-          purchase_price: null,
+          purchase_price: pg == null ? null : ing.unit === "Piece" ? round2(pg) : round2(pg * 1000),
           purchase_quantity: 1,
-          purchase_unit: ing.unit,
+          purchase_unit: purchaseUnitFor(ing.unit),
           base_unit: ing.unit,
-          cost_per_base_unit: null,
-          last_price_update: null,
+          cost_per_base_unit: cpbu,
+          last_price_update: pg == null ? null : SEED_TS.slice(0, 10),
           status: "active",
           created_by: U_ADMIN,
           created_at: SEED_TS,
         });
+      }
+      const cpbu = cpbuById.get(matId) ?? null;
+      const lineCost = cpbu == null ? null : round2(ing.qty * cpbu);
+      if (lineCost != null) {
+        rawCost += lineCost;
+        anyPriced = true;
       }
       recipe_ingredients.push({
         id: `${cb.id}-i${idx}`,
@@ -378,11 +422,19 @@ for (const d of allDefs) {
         component_type: "material",
         quantity_used: ing.qty,
         unit_used: ing.unit,
-        calculated_cost: null,
+        calculated_cost: lineCost,
         sort_order: idx,
       });
       if (ing.unit === "Gram") totalGrams += ing.qty;
     });
+    // Prefer the master summary's authoritative per-dish making/packaging/selling
+    // when the dish is listed there; otherwise use the ingredient-derived making cost.
+    const ingredientTotal = anyPriced ? round2(rawCost * (1 + WASTAGE_PCT / 100)) : null;
+    const ingredientPerPortion =
+      ingredientTotal != null && cb.serving_size > 0 ? round2(ingredientTotal / cb.serving_size) : ingredientTotal;
+    const dc = dishCostFor(cb.name);
+    const total = dc && dc.making != null ? dc.making : ingredientTotal;
+    const perPortion = dc && dc.making != null ? dc.making : ingredientPerPortion;
     recipes.push({
       id: cb.id,
       recipe_name: cb.name,
@@ -393,10 +445,10 @@ for (const d of allDefs) {
       preparation_time: null,
       serving_size: cb.serving_size,
       status: "approved",
-      selling_price: null,
-      packaging_cost: 0,
-      total_cost: null,
-      cost_per_portion: null,
+      selling_price: dc ? dc.selling : null,
+      packaging_cost: dc ? dc.packaging : 0,
+      total_cost: total,
+      cost_per_portion: perPortion,
       wastage_pct: WASTAGE_PCT,
       is_prep: false,
       yield_quantity: cb.yield_grams > 0 ? cb.yield_grams : round2(totalGrams),
