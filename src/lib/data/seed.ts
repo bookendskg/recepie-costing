@@ -5,14 +5,14 @@
 
 import { calculateCostPerBaseUnit, calculateIngredientCost, prepUnitCostFrom } from "../costing";
 import { canConvert } from "../units";
-import { costForCutYield } from "../yield";
+import { costForCutYield, computeYield } from "../yield";
 import { COOKBOOK_RECIPES } from "./cookbook";
 import { PIZZA_RECIPES, PIZZA_SIZE_LABEL, type PizzaSize } from "./pizzas";
 import { resolveParentAndCut, cutYieldPct } from "./ingredientCuts";
 import { MASTER_PRICES } from "./masterPrices";
 import { MASTER_DISH_COSTS } from "./masterDishCosts";
 import type { MockDb } from "./mock/db";
-import type { Brand, RawMaterial, Recipe, RecipeIngredient, User } from "./types";
+import type { Brand, IngredientYield, RawMaterial, Recipe, RecipeIngredient, User } from "./types";
 
 /** ₹ per gram for an ingredient from the master costing book (the only price
  *  source), matched by normalised name. Undefined when the book has no price. */
@@ -282,11 +282,38 @@ const yieldOf = (d: RecipeDef) => d.lines.reduce((s, l) => s + l.g, 0) || 1;
 // the yield-adjusted runtime recompute (§9).
 const SEED_YIELD_WASTAGE: Record<string, number> = { "m-onion": 20, "m-ginger": 15, "m-carrot": 10 };
 const yieldAdjPerGram = new Map<string, number>();
+const seededYields: IngredientYield[] = [];
 for (const [matId, wastagePct] of Object.entries(SEED_YIELD_WASTAGE)) {
   const perGram = matPerGram.get(matId);
   if (perGram == null) continue;
   const usableG = 1000 * (1 - wastagePct / 100);
   yieldAdjPerGram.set(matId, (perGram * 1000) / usableG);
+  // Build a real ingredient_yields row (1 KG standard purchase) so Yield Management
+  // is populated and the figures match the yield-adjusted recipe costs above.
+  const purchaseCost = round2(perGram * 1000);
+  const wastageQty = 1000 * (wastagePct / 100);
+  const r = computeYield({ purchaseCost, purchaseQuantity: 1, purchaseUnit: "KG", wastageQty });
+  seededYields.push({
+    id: `y-${matId}`,
+    ingredient_id: matId,
+    purchase_cost: purchaseCost,
+    purchase_quantity: 1,
+    purchase_unit: "KG",
+    raw_quantity: r.rawQtyBase,
+    raw_unit: "Gram",
+    wastage_quantity: wastageQty,
+    wastage_unit: "Gram",
+    usable_quantity: r.usableQty,
+    wastage_percentage: r.wastagePct,
+    yield_percentage: r.yieldPct,
+    original_unit_cost: r.originalUnitCost,
+    yield_adjusted_unit_cost: r.yieldAdjustedUnitCost,
+    effective_from: SEED_TS.slice(0, 10),
+    notes: "Standard prep yield",
+    created_at: SEED_TS,
+    updated_at: SEED_TS,
+    created_by: U_ADMIN,
+  });
 }
 const effPerGram = (id: string) => yieldAdjPerGram.get(id) ?? matPerGram.get(id) ?? 0;
 
@@ -645,8 +672,8 @@ for (const d of allDefs) {
 
 export function buildSeed(): MockDb {
   return {
-    // Yield + wastage start empty; seed real entries from the app.
-    ingredient_yields: [],
+    // Standard prep yields seeded (onion/ginger/carrot); wastage starts empty.
+    ingredient_yields: structuredClone(seededYields),
     wastage_entries: [],
     users: structuredClone(users),
     raw_materials: structuredClone(raw_materials),
