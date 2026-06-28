@@ -14,7 +14,8 @@ insert into public.outlets (id, brand, name) values
   ('capiche-ambli','capiche','Capiche Ambli'),
   ('capiche-university','capiche','Capiche University'),
   ('aiko-pal','aiko','Aiko Pal'),
-  ('aiko-ambli','aiko','Aiko Ambli');
+  ('aiko-ambli','aiko','Aiko Ambli')
+on conflict (id) do nothing;
 
 create table public.wastage_entries (
   id            uuid primary key default gen_random_uuid(),
