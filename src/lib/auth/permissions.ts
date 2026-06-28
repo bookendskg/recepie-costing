@@ -166,6 +166,16 @@ export function visibilityForUser(user: User): ViewVisibility {
   return visibilityFor("viewer", viewerShowCost(user) ? "aiko" : "capiche");
 }
 
+/**
+ * Whether the user sees the Master Costing dashboard (food/packaging/selling/FC%
+ * stats). Admins always do; any other role only when an admin grants
+ * `dashboard_access`. Everyone else gets the plain overview dashboard.
+ */
+export function canViewMasterDashboard(user: User | null): boolean {
+  if (!user) return false;
+  return user.role === "admin" || user.dashboard_access === true;
+}
+
 export const HOME_BY_ROLE: Record<Role, string> = {
   admin: "/dashboard",
   rnd: "/dashboard",

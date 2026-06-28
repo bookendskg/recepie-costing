@@ -152,12 +152,10 @@ export function AppLayout() {
               dark ? "bg-background" : "bg-white",
             )}
           >
-            {user.role !== "viewer" && (
-              <div className="shrink-0 border-b p-3">
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Brand</p>
-                <BrandFilter value={brand} onChange={(b) => setBrand(b)} className="w-full" />
-              </div>
-            )}
+            <div className="shrink-0 border-b p-3">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Brand</p>
+              <BrandFilter value={brand} onChange={(b) => setBrand(b)} className="w-full" />
+            </div>
             <div className="min-h-0 flex-1 overflow-y-auto">{sidebar(false)}</div>
           </aside>
         </div>
@@ -213,23 +211,19 @@ export function AppLayout() {
           <div className="flex-1" />
 
           {/* Mobile: brand chip (tap to open the drawer, which holds the selector). */}
-          {user.role !== "viewer" && (
-            <button
-              onClick={() => setMobileOpen(true)}
-              className={cn(
-                "mr-1 rounded-full border px-2.5 py-1 text-xs font-bold uppercase tracking-wide sm:hidden",
-                brandAccentText(brand),
-              )}
-              aria-label={`Brand ${brandWordmark[brand]} — tap to change`}
-            >
-              {brandWordmark[brand]}
-            </button>
-          )}
-          {user.role !== "viewer" && (
-            <div className="mr-1 hidden sm:block">
-              <BrandFilter value={brand} onChange={setBrand} />
-            </div>
-          )}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className={cn(
+              "mr-1 rounded-full border px-2.5 py-1 text-xs font-bold uppercase tracking-wide sm:hidden",
+              brandAccentText(brand),
+            )}
+            aria-label={`Brand ${brandWordmark[brand]} — tap to change`}
+          >
+            {brandWordmark[brand]}
+          </button>
+          <div className="mr-1 hidden sm:block">
+            <BrandFilter value={brand} onChange={setBrand} />
+          </div>
           <Button variant="ghost" size="icon" onClick={toggle} title="Toggle light/dark" aria-label="Toggle light/dark">
             {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>

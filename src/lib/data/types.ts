@@ -123,6 +123,9 @@ export interface User {
   accessible_brands?: Brand[];
   /** Viewer-only: whether this viewer sees costs/pricing (else Capiche-style). */
   show_cost?: boolean;
+  /** Whether this user sees the Master Costing dashboard (cost stats). Admins
+   *  always do; other roles only when an admin grants it. */
+  dashboard_access?: boolean;
   created_at: string;
   updated_at: string;
 }

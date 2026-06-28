@@ -25,6 +25,7 @@ export interface UpdateUserInput {
   last_login?: string | null;
   accessible_brands?: Brand[];
   show_cost?: boolean;
+  dashboard_access?: boolean;
 }
 
 /** Strip the mock-only password before handing a user to the UI. */
@@ -96,6 +97,7 @@ export const usersRepo = {
         if (patch.last_login !== undefined) u.last_login = patch.last_login;
         if (patch.accessible_brands !== undefined) u.accessible_brands = patch.accessible_brands;
         if (patch.show_cost !== undefined) u.show_cost = patch.show_cost;
+        if (patch.dashboard_access !== undefined) u.dashboard_access = patch.dashboard_access;
         if (roleChanged) {
           u.last_role_update = nowISO();
           u.role_updated_by = actorId;
@@ -123,7 +125,11 @@ export const usersRepo = {
  * Extend via VITE_OWNER_EMAILS (comma-separated) without editing code.
  */
 const OWNER_EMAILS = new Set(
-  ["reservation.bookends@gmail.com", ...(import.meta.env?.VITE_OWNER_EMAILS ?? "").split(",")]
+  [
+    "reservation.bookends@gmail.com",
+    "moin.bookends@gmail.com",
+    ...(import.meta.env?.VITE_OWNER_EMAILS ?? "").split(","),
+  ]
     .map((e: string) => e.trim().toLowerCase())
     .filter(Boolean),
 );

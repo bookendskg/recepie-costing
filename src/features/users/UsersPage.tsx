@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { BadgeCheck, KeyRound, Mail, MoreVertical, Plus } from "lucide-react";
+import { BadgeCheck, KeyRound, LayoutDashboard, Mail, MoreVertical, Plus } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { TableSkeleton } from "@/components/TableSkeleton";
@@ -92,6 +92,15 @@ export function UsersPage() {
     }
   };
 
+  const toggleDashboard = async (u: User) => {
+    try {
+      await updateMut.mutateAsync({ id: u.id, patch: { dashboard_access: !u.dashboard_access } });
+      toast.success(u.dashboard_access ? "Dashboard access revoked" : "Dashboard access granted");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Update failed");
+    }
+  };
+
   return (
     <>
       <PageHeader
@@ -180,9 +189,16 @@ export function UsersPage() {
                     {scoped ? outlet ?? "All outlets" : "—"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={u.status === "active" ? "success" : "secondary"}>
-                      {u.status}
-                    </Badge>
+                    <div className="flex flex-wrap items-center gap-1">
+                      <Badge variant={u.status === "active" ? "success" : "secondary"}>
+                        {u.status}
+                      </Badge>
+                      {(u.role === "admin" || u.dashboard_access) && (
+                        <Badge variant="outline" className="gap-1" title="Can view Master Costing dashboard">
+                          <LayoutDashboard className="h-3 w-3" /> Costing
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="hidden md:table-cell text-muted-foreground">
                     {fmtDate(u.last_login)}
@@ -206,6 +222,12 @@ export function UsersPage() {
                         {u.role === "viewer" && (
                           <DropdownMenuItem onClick={() => setAssignFor(u)}>
                             <KeyRound className="h-4 w-4" /> Assign Recipe Access
+                          </DropdownMenuItem>
+                        )}
+                        {u.role !== "admin" && (
+                          <DropdownMenuItem onClick={() => toggleDashboard(u)}>
+                            <LayoutDashboard className="h-4 w-4" />
+                            {u.dashboard_access ? "Revoke dashboard access" : "Grant dashboard access"}
                           </DropdownMenuItem>
                         )}
                         {isFirebaseConfigured && (
