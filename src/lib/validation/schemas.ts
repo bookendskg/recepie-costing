@@ -161,9 +161,10 @@ export const wastageSchema = z
       .finite("Enter a valid cost")
       .min(0, "Cost cannot be negative")
       .refine((v) => Number(v.toFixed(2)) === v, "Use at most two decimal places"),
-    reason: z.string().optional().or(z.literal("")),
+    reason: z.string().min(1, "Reason is required"),
     department: z.enum(DEPARTMENTS),
     shift: z.string().optional().or(z.literal("")),
+    done_by: z.string().min(1, "Enter who did the wastage"),
     approved_by: z.string().optional().or(z.literal("")),
     notes: z.string().optional().or(z.literal("")),
   })

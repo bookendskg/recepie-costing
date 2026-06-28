@@ -240,6 +240,7 @@ export function WastagePage() {
                     <TableHead className="text-right">Qty</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                     <TableHead>Dept</TableHead>
+                    <TableHead>Done By</TableHead>
                     <TableHead className="w-10" />
                   </TableRow>
                 </TableHeader>
@@ -253,6 +254,7 @@ export function WastagePage() {
                       <TableCell className="text-right font-mono">{w.quantity} {w.unit}</TableCell>
                       <TableCell className="text-right font-mono font-semibold">{formatINR(w.total_cost)}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{w.department}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{w.done_by ?? "—"}</TableCell>
                       <TableCell>{canEdit && <RowActions onEdit={() => { setEditing(w); setFormOpen(true); }} onDelete={() => setDeleting(w)} />}</TableCell>
                     </TableRow>
                   ))}

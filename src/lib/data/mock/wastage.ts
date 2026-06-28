@@ -18,6 +18,7 @@ export interface WastageInput {
   reason?: string | null;
   department: Department;
   shift?: string | null;
+  done_by?: string | null;
   approved_by?: string | null;
   notes?: string | null;
 }
@@ -72,6 +73,7 @@ export const wastageRepo = {
           reason: input.reason ?? null,
           department: input.department,
           shift: input.shift ?? null,
+          done_by: input.done_by ?? null,
           entered_by: actorId,
           approved_by: input.approved_by || null,
           notes: input.notes ?? null,
@@ -113,6 +115,7 @@ export const wastageRepo = {
           reason: input.reason ?? null,
           department: input.department,
           shift: input.shift ?? null,
+          done_by: input.done_by ?? null,
           approved_by: input.approved_by || null,
           notes: input.notes ?? null,
           updated_at: nowISO(),

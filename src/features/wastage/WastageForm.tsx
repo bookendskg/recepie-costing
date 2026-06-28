@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { wastageSchema, type WastageValues } from "@/lib/validation/schemas";
 import { applicableUnitCost } from "@/lib/data";
 import {
@@ -32,7 +41,7 @@ import {
   type Brand,
   type WastageEntry,
 } from "@/lib/data/types";
-import { formatINR } from "@/lib/utils";
+import { cn, formatINR } from "@/lib/utils";
 import { todayISO } from "@/lib/data/mock/db";
 import { useMaterials } from "@/features/raw-materials/hooks";
 import { useRecipes } from "@/features/recipes/hooks";
@@ -74,8 +83,9 @@ export function WastageForm({
       unit: "Gram",
       unit_cost: undefined as unknown as number,
       reason: "",
-      department: "Kitchen",
+      department: "Kitchen Staff",
       shift: "",
+      done_by: "",
       approved_by: "",
       notes: "",
     },
@@ -100,6 +110,7 @@ export function WastageForm({
             reason: record.reason ?? "",
             department: record.department,
             shift: record.shift ?? "",
+            done_by: record.done_by ?? "",
             approved_by: record.approved_by ?? "",
             notes: record.notes ?? "",
           }
@@ -115,8 +126,9 @@ export function WastageForm({
             unit: "Gram",
             unit_cost: undefined as unknown as number,
             reason: "",
-            department: "Kitchen",
+            department: "Kitchen Staff",
             shift: "",
+            done_by: "",
             approved_by: "",
             notes: "",
           },
@@ -167,9 +179,10 @@ export function WastageForm({
       quantity: values.quantity,
       unit: values.unit,
       unit_cost: values.unit_cost,
-      reason: values.reason || null,
+      reason: values.reason,
       department: values.department,
       shift: values.shift || null,
+      done_by: values.done_by,
       approved_by: values.approved_by || null,
       notes: values.notes || null,
     };
@@ -238,24 +251,30 @@ export function WastageForm({
                 Recipe
               </Button>
             </div>
-            <Field label={itemType === "ingredient" ? "Ingredient *" : "Recipe *"} error={formState.errors.ingredient_id?.message}>
-              <Select value={selectedItem ?? ""} onValueChange={onPickItem}>
-                <SelectTrigger><SelectValue placeholder={`Select ${itemType}`} /></SelectTrigger>
-                <SelectContent>
-                  {(itemType === "ingredient" ? materials : menuRecipes).map((x) => (
-                    <SelectItem key={x.id} value={x.id}>
-                      {"ingredient_name" in x ? x.ingredient_name : x.recipe_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Field
+              label={itemType === "ingredient" ? "Ingredient *" : "Recipe *"}
+              error={formState.errors.ingredient_id?.message || formState.errors.recipe_id?.message}
+            >
+              <ItemCombobox
+                items={
+                  itemType === "ingredient"
+                    ? materials.map((m) => ({ id: m.id, label: m.ingredient_name }))
+                    : menuRecipes.map((r) => ({
+                        id: r.id,
+                        label: r.size_label ? `${r.recipe_name} (${r.size_label})` : r.recipe_name,
+                      }))
+                }
+                value={selectedItem ?? null}
+                onChange={onPickItem}
+                placeholder={`Search ${itemType}…`}
+              />
             </Field>
             <div className="mt-3 grid grid-cols-3 gap-3">
               <Field label="Quantity *" error={formState.errors.quantity?.message}>
                 <Input type="number" step="0.001" {...register("quantity", { valueAsNumber: true })} />
               </Field>
-              <Field label="Unit *">
-                <Input {...register("unit")} />
+              <Field label="Unit">
+                <Input {...register("unit")} readOnly tabIndex={-1} className="bg-muted text-muted-foreground" />
               </Field>
               <Field label="Unit Cost (₹) *" error={formState.errors.unit_cost?.message}>
                 <CurrencyInput value={unitCost ?? undefined} onChange={(v) => setValue("unit_cost", v as number, { shouldValidate: true })} />
@@ -287,9 +306,14 @@ export function WastageForm({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Reason">
+            <Field label="Reason *" error={formState.errors.reason?.message}>
               <Input {...register("reason")} placeholder="e.g. Spoiled / burnt / expired" />
             </Field>
+            <Field label="Wastage Done By *" error={formState.errors.done_by?.message}>
+              <Input {...register("done_by")} placeholder="Staff member name" />
+            </Field>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
             <Field label="Approved By">
               <Input {...register("approved_by")} placeholder="Manager name (optional)" />
             </Field>
@@ -318,5 +342,56 @@ function Field({ label, error, children }: { label: string; error?: string; chil
       {children}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
+  );
+}
+
+/** Searchable single-select for picking the wasted ingredient/recipe. */
+function ItemCombobox({
+  items,
+  value,
+  onChange,
+  placeholder,
+}: {
+  items: { id: string; label: string }[];
+  value: string | null;
+  onChange: (id: string) => void;
+  placeholder: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = items.find((i) => i.id === value);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button type="button" variant="outline" role="combobox" className="w-full justify-between font-normal">
+          <span className={cn("truncate", !selected && "text-muted-foreground")}>
+            {selected ? selected.label : placeholder}
+          </span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Search…" />
+          <CommandList>
+            <CommandEmpty>No match found.</CommandEmpty>
+            <CommandGroup>
+              {items.map((i) => (
+                <CommandItem
+                  key={i.id}
+                  value={i.label}
+                  onSelect={() => {
+                    onChange(i.id);
+                    setOpen(false);
+                  }}
+                >
+                  <Check className={cn("mr-2 h-4 w-4", value === i.id ? "opacity-100" : "opacity-0")} />
+                  {i.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }

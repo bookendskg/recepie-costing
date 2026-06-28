@@ -56,12 +56,8 @@ export const WASTAGE_TYPES = [
 export type WastageType = (typeof WASTAGE_TYPES)[number];
 
 export const DEPARTMENTS = [
-  "Kitchen",
-  "Bar",
-  "Bakery",
-  "Store",
-  "Service",
-  "Central Kitchen",
+  "Kitchen Staff",
+  "Service Staff",
   "Other",
 ] as const;
 export type Department = (typeof DEPARTMENTS)[number];
@@ -85,6 +81,8 @@ export interface WastageEntry {
   reason: string | null;
   department: Department;
   shift: string | null;
+  /** Free-text name of the person who caused/handled the wastage. */
+  done_by: string | null;
   entered_by: string | null;
   approved_by: string | null;
   notes: string | null;
