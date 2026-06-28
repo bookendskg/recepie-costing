@@ -69,7 +69,7 @@ const COLUMN_DEFS = [
   { key: "category", label: "Category" },
   { key: "supplier", label: "Supplier" },
   { key: "price", label: "Purchase Price" },
-  { key: "packSize", label: "Pack Size" },
+  { key: "packSize", label: "Quantity" },
 ] as const;
 type ColKey = (typeof COLUMN_DEFS)[number]["key"];
 
@@ -433,7 +433,7 @@ export function MaterialsPage() {
                     {cols.category && <SortHead label="Category" k="category" />}
                     {cols.supplier && <TableHead>Supplier</TableHead>}
                     {cols.price && <SortHead label="Purchase Price" k="price" />}
-                    {cols.packSize && <TableHead>Pack Size</TableHead>}
+                    {cols.packSize && <TableHead>Quantity</TableHead>}
                     <TableHead className="w-10" />
                   </TableRow>
                 </TableHeader>

@@ -9,7 +9,7 @@ export async function exportMaterials(materials: RawMaterial[], label: string) {
     Category: m.category,
     Supplier: m.supplier_name ?? "",
     "Purchase Price (₹)": m.purchase_price ?? "",
-    "Pack Size": formatQuantityWithUnit(m.purchase_quantity, m.purchase_unit, { humanize: false }),
+    Quantity: formatQuantityWithUnit(m.purchase_quantity, m.purchase_unit, { humanize: false }),
     "Base Unit": m.base_unit,
     "Cost / Base Unit (₹)": m.cost_per_base_unit ?? "",
     Status: m.status,
