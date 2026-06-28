@@ -51,15 +51,22 @@ returns text language sql security definer stable set search_path = public as $$
   select role::text from public.user_profiles where id = auth.uid()
 $$;
 
+-- Materials + yields (pricing) are admin/editor only.
 create or replace function public.can_write_catalog()
 returns boolean language sql security definer stable set search_path = public as $$
   select public.app_role() in ('admin','editor')
 $$;
 
--- Can the caller act on this outlet's operational data? Admin + Editor only.
+-- Recipes may also be edited by Head Chef (not ingredient pricing).
+create or replace function public.can_edit_recipes()
+returns boolean language sql security definer stable set search_path = public as $$
+  select public.app_role() in ('admin','editor','head_chef')
+$$;
+
+-- Operational (wastage) data: admin/editor/head_chef.
 create or replace function public.can_access_outlet(p_outlet text)
 returns boolean language sql security definer stable set search_path = public as $$
-  select public.app_role() in ('admin','editor')
+  select public.app_role() in ('admin','editor','head_chef')
 $$;
 
 -- Brands a viewer may see (mirrors viewerBrands()): null accessible_brands = all.
@@ -86,13 +93,13 @@ alter table public.recipes enable row level security;
 drop policy if exists viewer_recipe_access on public.recipes;
 drop policy if exists recipes_read  on public.recipes;
 drop policy if exists recipes_write on public.recipes;
--- Admin/Editor see everything; viewers see only approved recipes in their brands.
+-- Staff roles see everything; viewer/chef see only approved recipes in their brands.
 create policy recipes_read on public.recipes for select to authenticated using (
-  public.app_role() in ('admin','editor')
-  or (public.app_role() = 'viewer' and status = 'approved' and public.viewer_can_see_brand(brand))
+  public.app_role() in ('admin','editor','head_chef')
+  or (public.app_role() in ('viewer','chef') and status = 'approved' and public.viewer_can_see_brand(brand))
 );
 create policy recipes_write on public.recipes for all to authenticated
-  using (public.can_write_catalog()) with check (public.can_write_catalog());
+  using (public.can_edit_recipes()) with check (public.can_edit_recipes());
 
 -- ── 6. RLS: recipe_ingredients (follow the parent recipe's authority) ──────
 alter table public.recipe_ingredients enable row level security;
@@ -100,7 +107,7 @@ drop policy if exists recipe_ingredients_read  on public.recipe_ingredients;
 drop policy if exists recipe_ingredients_write on public.recipe_ingredients;
 create policy recipe_ingredients_read on public.recipe_ingredients for select to authenticated using (true);
 create policy recipe_ingredients_write on public.recipe_ingredients for all to authenticated
-  using (public.can_write_catalog()) with check (public.can_write_catalog());
+  using (public.can_edit_recipes()) with check (public.can_edit_recipes());
 
 -- ── 7. RLS: ingredient_yields ──────────────────────────────────────────────
 alter table public.ingredient_yields enable row level security;
@@ -126,7 +133,7 @@ drop policy if exists wastage_delete  on public.wastage_entries;
 create policy wastage_read   on public.wastage_entries for select to authenticated
   using (public.can_access_outlet(outlet_id));
 create policy wastage_insert on public.wastage_entries for insert to authenticated
-  with check (public.app_role() in ('admin','editor'));
+  with check (public.app_role() in ('admin','editor','head_chef'));
 create policy wastage_update on public.wastage_entries for update to authenticated
   using (public.can_access_outlet(outlet_id)) with check (public.can_access_outlet(outlet_id));
 create policy wastage_delete on public.wastage_entries for delete to authenticated
@@ -142,7 +149,7 @@ alter table public.user_recipe_views         enable row level security;
 
 drop policy if exists recipe_cost_history_rw on public.recipe_cost_history;
 create policy recipe_cost_history_rw on public.recipe_cost_history for all to authenticated
-  using (true) with check (public.can_write_catalog());
+  using (true) with check (public.can_edit_recipes());
 
 drop policy if exists ingredient_price_history_rw on public.ingredient_price_history;
 create policy ingredient_price_history_rw on public.ingredient_price_history for all to authenticated
@@ -150,7 +157,7 @@ create policy ingredient_price_history_rw on public.ingredient_price_history for
 
 drop policy if exists recipe_versions_rw on public.recipe_versions;
 create policy recipe_versions_rw on public.recipe_versions for all to authenticated
-  using (true) with check (public.can_write_catalog());
+  using (true) with check (public.can_edit_recipes());
 
 drop policy if exists admin_only_audit on public.audit_logs;
 drop policy if exists audit_read   on public.audit_logs;
@@ -168,6 +175,6 @@ create policy settings_write on public.system_settings for all to authenticated
 drop policy if exists user_recipe_views_read  on public.user_recipe_views;
 drop policy if exists user_recipe_views_write on public.user_recipe_views;
 create policy user_recipe_views_read on public.user_recipe_views for select to authenticated
-  using (user_id = auth.uid() or public.can_write_catalog());
+  using (user_id = auth.uid() or public.can_edit_recipes());
 create policy user_recipe_views_write on public.user_recipe_views for all to authenticated
-  using (public.can_write_catalog()) with check (public.can_write_catalog());
+  using (public.can_edit_recipes()) with check (public.can_edit_recipes());

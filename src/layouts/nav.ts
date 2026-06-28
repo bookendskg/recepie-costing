@@ -29,15 +29,15 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, group: "Overview", roles: ["admin", "editor", "viewer"] },
-  { to: "/materials", label: "Raw Materials", icon: Beef, group: "Catalog", roles: ["admin", "editor"] },
-  { to: "/recipes", label: "Recipes", icon: BookOpen, group: "Catalog", roles: ["admin", "editor", "viewer"] },
-  { to: "/prep", label: "In-House Prep", icon: ChefHat, group: "Catalog", roles: ["admin", "editor"] },
-  { to: "/yield", label: "Yield Management", icon: Sprout, group: "Catalog", roles: ["admin", "editor"] },
-  { to: "/wastage", label: "Wastage Management", icon: Trash2, group: "Operations", roles: ["admin", "editor"] },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, group: "Overview", roles: ["admin", "editor", "head_chef", "chef", "viewer"] },
+  { to: "/materials", label: "Raw Materials", icon: Beef, group: "Catalog", roles: ["admin", "editor", "head_chef"] },
+  { to: "/recipes", label: "Recipes", icon: BookOpen, group: "Catalog", roles: ["admin", "editor", "head_chef", "chef", "viewer"] },
+  { to: "/prep", label: "In-House Prep", icon: ChefHat, group: "Catalog", roles: ["admin", "editor", "head_chef"] },
+  { to: "/yield", label: "Yield Management", icon: Sprout, group: "Catalog", roles: ["admin", "editor", "head_chef"] },
+  { to: "/wastage", label: "Wastage Management", icon: Trash2, group: "Operations", roles: ["admin", "editor", "head_chef"] },
   { to: "/approvals", label: "Approvals", icon: CheckCircle2, group: "Operations", roles: ["admin"] },
-  { to: "/reports", label: "Reports", icon: FileBarChart, group: "Operations", roles: ["admin", "editor"] },
-  { to: "/viewer-access", label: "Viewer Access", icon: Eye, group: "Operations", roles: ["admin", "editor"] },
+  { to: "/reports", label: "Reports", icon: FileBarChart, group: "Operations", roles: ["admin", "editor", "head_chef"] },
+  { to: "/viewer-access", label: "Viewer Access", icon: Eye, group: "Operations", roles: ["admin", "editor", "head_chef"] },
   { to: "/users", label: "User Management", icon: Users, group: "Admin", roles: ["admin"] },
   { to: "/audit", label: "Price Changes", icon: ScrollText, group: "Admin", roles: ["admin"] },
   { to: "/settings", label: "Settings", icon: Settings, group: "Admin", roles: ["admin"] },

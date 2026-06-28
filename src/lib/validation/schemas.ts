@@ -47,7 +47,7 @@ export type ChangePasswordValues = ResetPasswordValues;
 export const userSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().min(1, "Email is required").email("Enter a valid email"),
-  role: z.enum(["admin", "editor", "viewer"]),
+  role: z.enum(["admin", "editor", "head_chef", "chef", "viewer"]),
   status: z.enum(["active", "inactive"]),
   assigned_brand: z.enum(["capiche", "aiko"]).nullable().optional(),
   assigned_outlet: z.string().nullable().optional(),

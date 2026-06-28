@@ -77,6 +77,22 @@ const MATRIX: Record<Role, Capability[]> = {
     "viewer.assign",
     "report.excel",
   ],
+  // Head Chef: edits + sees everything, records wastage, and can grant chefs/viewers
+  // recipe-view access — but does not change ingredient prices (admin/editor only).
+  head_chef: [
+    "material.view",
+    "yield.manage",
+    "wastage.create",
+    "recipe.create",
+    "recipe.editAll",
+    "recipe.duplicate",
+    "recipe.submit",
+    "recipe.viewAll",
+    "viewer.assign",
+    "report.excel",
+  ],
+  // Chef: read-only, same as a Viewer.
+  chef: [],
   viewer: [],
 };
 
@@ -85,10 +101,15 @@ export function can(role: Role | undefined, cap: Capability): boolean {
   return MATRIX[role].includes(cap);
 }
 
-/** Can this user edit this specific recipe? Admin/Editor, else the creator. */
+/** Roles that are read-only (treated like a Viewer everywhere). */
+export function isReadOnlyRole(role: Role | undefined): boolean {
+  return role === "viewer" || role === "chef";
+}
+
+/** Can this user edit this specific recipe? Admin/Editor/Head Chef, else the creator. */
 export function canEditRecipe(user: User | null, recipe: Recipe): boolean {
   if (!user) return false;
-  if (user.role === "admin" || user.role === "editor") return true;
+  if (user.role === "admin" || user.role === "editor" || user.role === "head_chef") return true;
   return recipe.created_by === user.id;
 }
 
@@ -134,8 +155,8 @@ export function visibilityFor(
   role: Role,
   viewType: ViewType | null,
 ): ViewVisibility {
-  // All staff roles (admin, editor, head chef, chef) see full costing.
-  if (role !== "viewer") return AIKO;
+  // Admin/Editor/Head Chef see full costing; Viewer + Chef are restricted.
+  if (!isReadOnlyRole(role)) return AIKO;
   if (viewType === "capiche") return CAPICHE;
   if (viewType === "aiko") return AIKO;
   return CAPICHE; // safest default for an unassigned viewer
@@ -154,15 +175,15 @@ export function viewerShowCost(user: User | null): boolean {
   return user?.show_cost ?? true;
 }
 
-/** A viewer can see a recipe if it's approved and in one of their brands. */
+/** A viewer/chef can see a recipe if it's approved and in one of their brands. */
 export function viewerCanAccess(user: User | null, recipe: Recipe): boolean {
-  if (!user || user.role !== "viewer") return false;
+  if (!user || !isReadOnlyRole(user.role)) return false;
   return recipe.status === "approved" && viewerBrands(user).includes(recipe.brand);
 }
 
-/** Visibility for any user: admin/editor see all; viewers per their show_cost grant. */
+/** Visibility for any user: staff roles see all; viewer/chef per their show_cost grant. */
 export function visibilityForUser(user: User): ViewVisibility {
-  if (user.role !== "viewer") return visibilityFor(user.role, null);
+  if (!isReadOnlyRole(user.role)) return visibilityFor(user.role, null);
   return visibilityFor("viewer", viewerShowCost(user) ? "aiko" : "capiche");
 }
 
@@ -187,16 +208,17 @@ export function isPendingApproval(user: User | null): boolean {
 }
 
 // --- Brand / outlet scope ------------------------------------------------
-// Admin + Editor operate across everything; Viewers follow their accessible_brands.
+// Admin / Editor / Head Chef operate across everything; Viewer + Chef follow their
+// accessible_brands grant.
 
 /** Brands a user may act within (for scoping selectors + data). */
 export function userBrands(user: User | null): Brand[] {
   if (!user) return [];
-  if (user.role === "viewer") return user.accessible_brands ?? ALL_BRANDS;
-  return ALL_BRANDS; // admin, editor
+  if (isReadOnlyRole(user.role)) return user.accessible_brands ?? ALL_BRANDS;
+  return ALL_BRANDS; // admin, editor, head_chef
 }
 
-/** Outlets a user may act within (all for admin/editor; brand-scoped for viewers). */
+/** Outlets a user may act within (all for staff roles; brand-scoped for viewer/chef). */
 export function accessibleOutlets(user: User | null): Outlet[] {
   if (!user) return [];
   const brands = userBrands(user);
@@ -214,5 +236,7 @@ export function canAccessBrand(user: User | null, brand: Brand): boolean {
 export const HOME_BY_ROLE: Record<Role, string> = {
   admin: "/dashboard",
   editor: "/dashboard",
+  head_chef: "/dashboard",
+  chef: "/dashboard",
   viewer: "/dashboard",
 };

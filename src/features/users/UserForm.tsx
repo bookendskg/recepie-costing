@@ -133,6 +133,8 @@ export function UserForm({
                 <SelectContent>
                   <SelectItem value="admin">{ROLE_LABELS.admin}</SelectItem>
                   <SelectItem value="editor">{ROLE_LABELS.editor}</SelectItem>
+                  <SelectItem value="head_chef">{ROLE_LABELS.head_chef}</SelectItem>
+                  <SelectItem value="chef">{ROLE_LABELS.chef}</SelectItem>
                   <SelectItem value="viewer">{ROLE_LABELS.viewer}</SelectItem>
                 </SelectContent>
               </Select>

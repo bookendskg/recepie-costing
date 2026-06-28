@@ -20,6 +20,8 @@ import {
 const DEMO = [
   { role: "Admin", email: "rahul@brand.com" },
   { role: "Editor", email: "priya@brand.com" },
+  { role: "Head Chef", email: "marco@brand.com" },
+  { role: "Chef", email: "sara@brand.com" },
   { role: "Viewer", email: "amit@brand.com" },
 ];
 
