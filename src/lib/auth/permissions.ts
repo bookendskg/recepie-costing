@@ -3,7 +3,17 @@
 // Postgres RLS policies (PRD §9.3) authored in db/migrations — when Supabase
 // is added these checks are backed by RLS, not replaced.
 
-import { BRANDS, type Brand, type Recipe, type Role, type User, type ViewType } from "../data/types";
+import {
+  BRANDS,
+  OUTLETS,
+  outletsForBrand,
+  type Brand,
+  type Outlet,
+  type Recipe,
+  type Role,
+  type User,
+  type ViewType,
+} from "../data/types";
 
 const ALL_BRANDS: Brand[] = BRANDS.map((b) => b.value);
 
@@ -184,6 +194,49 @@ export function canViewMasterDashboard(user: User | null): boolean {
 export function isPendingApproval(user: User | null): boolean {
   if (!user) return false;
   return user.approved === false && user.role !== "admin";
+}
+
+// --- Brand / outlet scope (§6/§11/§12) ------------------------------------
+// Admin and R&D operate across everything. Outlet Manager / Staff are confined
+// to their assigned outlet (or all outlets of their assigned brand if no single
+// outlet is set). Viewers follow their accessible_brands grant.
+
+/** Brands a user may act within (for scoping selectors + data). */
+export function userBrands(user: User | null): Brand[] {
+  if (!user) return [];
+  if (user.role === "viewer") return user.accessible_brands ?? ALL_BRANDS;
+  if (user.role === "outlet_manager" || user.role === "staff") {
+    return user.assigned_brand ? [user.assigned_brand] : ALL_BRANDS;
+  }
+  return ALL_BRANDS; // admin, rnd
+}
+
+/** Outlets a user may act within. */
+export function accessibleOutlets(user: User | null): Outlet[] {
+  if (!user) return [];
+  if (user.role === "outlet_manager" || user.role === "staff") {
+    if (user.assigned_outlet) {
+      const o = OUTLETS.find((x) => x.id === user.assigned_outlet);
+      return o ? [o] : [];
+    }
+    if (user.assigned_brand) return outletsForBrand(user.assigned_brand);
+    return OUTLETS;
+  }
+  const brands = userBrands(user);
+  return OUTLETS.filter((o) => brands.includes(o.brand));
+}
+
+export function canAccessOutlet(user: User | null, outletId: string): boolean {
+  return accessibleOutlets(user).some((o) => o.id === outletId);
+}
+
+export function canAccessBrand(user: User | null, brand: Brand): boolean {
+  return userBrands(user).includes(brand);
+}
+
+/** True when the user is confined to a subset of outlets (outlet roles). */
+export function isOutletScoped(user: User | null): boolean {
+  return !!user && (user.role === "outlet_manager" || user.role === "staff");
 }
 
 export const HOME_BY_ROLE: Record<Role, string> = {

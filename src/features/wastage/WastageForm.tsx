@@ -32,12 +32,13 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { wastageSchema, type WastageValues } from "@/lib/validation/schemas";
+import { useSession } from "@/lib/auth/session";
+import { accessibleOutlets, userBrands } from "@/lib/auth/permissions";
 import { applicableUnitCost } from "@/lib/data";
 import {
   BRANDS,
   DEPARTMENTS,
   WASTAGE_TYPES,
-  outletsForBrand,
   type Brand,
   type WastageEntry,
 } from "@/lib/data/types";
@@ -67,14 +68,22 @@ export function WastageForm({
   const updateMut = useUpdateWastage();
   const isEdit = !!record;
 
+  const sessionUser = useSession((s) => s.user);
+  // §11/§12 outlet roles can only file wastage for their permitted outlets.
+  const myBrands = userBrands(sessionUser);
+  const myOutlets = accessibleOutlets(sessionUser);
+  const defBrand = (myBrands[0] as Brand) ?? "capiche";
+  const defOutlet =
+    (myOutlets.find((o) => o.brand === defBrand) ?? myOutlets[0])?.id ?? "capiche-piplod";
+
   const menuRecipes = recipes.filter((r) => !r.is_prep);
 
   const form = useForm<WastageValues>({
     resolver: zodResolver(wastageSchema),
     defaultValues: {
       wastage_date: todayISO(),
-      brand: "capiche",
-      outlet_id: "capiche-piplod",
+      brand: defBrand,
+      outlet_id: defOutlet,
       wastage_type: "Spoilage",
       item_type: "ingredient",
       ingredient_id: null,
@@ -116,8 +125,8 @@ export function WastageForm({
           }
         : {
             wastage_date: todayISO(),
-            brand: "capiche",
-            outlet_id: "capiche-piplod",
+            brand: defBrand,
+            outlet_id: defOutlet,
             wastage_type: "Spoilage",
             item_type: "ingredient",
             ingredient_id: null,
@@ -144,7 +153,8 @@ export function WastageForm({
 
   const onBrand = (b: Brand) => {
     setValue("brand", b);
-    setValue("outlet_id", outletsForBrand(b)[0]?.id ?? "");
+    const next = myOutlets.filter((o) => o.brand === b);
+    setValue("outlet_id", next[0]?.id ?? "");
   };
 
   const onItemType = (t: "ingredient" | "recipe") => {
@@ -225,18 +235,18 @@ export function WastageForm({
               </Select>
             </Field>
             <Field label="Brand *">
-              <Select value={brand} onValueChange={(v) => onBrand(v as Brand)}>
+              <Select value={brand} onValueChange={(v) => onBrand(v as Brand)} disabled={myBrands.length <= 1}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {BRANDS.map((b) => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}
+                  {BRANDS.filter((b) => myBrands.includes(b.value)).map((b) => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </Field>
             <Field label="Outlet *" error={formState.errors.outlet_id?.message}>
-              <Select value={watch("outlet_id")} onValueChange={(v) => setValue("outlet_id", v)}>
+              <Select value={watch("outlet_id")} onValueChange={(v) => setValue("outlet_id", v)} disabled={myOutlets.length <= 1}>
                 <SelectTrigger><SelectValue placeholder="Select outlet" /></SelectTrigger>
                 <SelectContent>
-                  {outletsForBrand(brand).map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+                  {myOutlets.filter((o) => o.brand === brand).map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </Field>

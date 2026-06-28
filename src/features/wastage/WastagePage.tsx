@@ -33,7 +33,7 @@ import {
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { formatINR, formatDate } from "@/lib/utils";
 import { useSession } from "@/lib/auth/session";
-import { can } from "@/lib/auth/permissions";
+import { accessibleOutlets, can, canAccessOutlet, userBrands } from "@/lib/auth/permissions";
 import { BRANDS, OUTLETS, WASTAGE_TYPES, outletById, type Brand, type WastageEntry } from "@/lib/data/types";
 import { useMaterials } from "@/features/raw-materials/hooks";
 import { useRecipes } from "@/features/recipes/hooks";
@@ -46,6 +46,8 @@ const PAGE_SIZE = 10;
 export function WastagePage() {
   const user = useSession((s) => s.user)!;
   const canEdit = can(user.role, "wastage.create");
+  const myBrands = userBrands(user);
+  const myOutlets = accessibleOutlets(user);
   const { data: entries = [], isLoading } = useWastage();
   const { data: materials = [] } = useMaterials();
   const { data: recipes = [] } = useRecipes();
@@ -68,6 +70,8 @@ export function WastagePage() {
 
   const filtered = useMemo(() => {
     return entries.filter((w) => {
+      // §11/§12 outlet roles only ever see their permitted outlets' wastage.
+      if (!canAccessOutlet(user, w.outlet_id)) return false;
       if (brand !== "all" && w.brand !== brand) return false;
       if (outlet !== "all" && w.outlet_id !== outlet) return false;
       if (type !== "all" && w.wastage_type !== type) return false;
@@ -78,7 +82,7 @@ export function WastagePage() {
       return true;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries, brand, outlet, type, search, matById, recById]);
+  }, [entries, brand, outlet, type, search, matById, recById, user]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, pageCount);
@@ -195,14 +199,14 @@ export function WastagePage() {
             <SelectTrigger><SelectValue placeholder="Brand" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Brands</SelectItem>
-              {BRANDS.map((b) => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}
+              {BRANDS.filter((b) => myBrands.includes(b.value)).map((b) => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={outlet} onValueChange={(v) => { setOutlet(v); resetPage(); }}>
             <SelectTrigger><SelectValue placeholder="Outlet" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Outlets</SelectItem>
-              {OUTLETS.filter((o) => brand === "all" || o.brand === (brand as Brand)).map((o) => (
+              {myOutlets.filter((o) => brand === "all" || o.brand === (brand as Brand)).map((o) => (
                 <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
               ))}
             </SelectContent>
