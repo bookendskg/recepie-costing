@@ -117,11 +117,23 @@ export const usersRepo = {
 };
 
 /**
+ * Owner emails that are always granted Admin on sign-in/sign-up. This is the
+ * bootstrap so the business owner gets in as Admin with their real email,
+ * without needing an existing admin to elevate them. Lower-cased for matching.
+ * Extend via VITE_OWNER_EMAILS (comma-separated) without editing code.
+ */
+const OWNER_EMAILS = new Set(
+  ["reservation.bookends@gmail.com", ...(import.meta.env?.VITE_OWNER_EMAILS ?? "").split(",")]
+    .map((e: string) => e.trim().toLowerCase())
+    .filter(Boolean),
+);
+
+/**
  * Map a Firebase-authenticated identity to the internal profile (Firebase
  * migration). Finds the profile by email — preserving the existing role of
- * seeded/known users — or creates a new one defaulting to Viewer. Stores the
- * Firebase UID and stamps last_login. Roles always live in this profile store,
- * never in Firebase. Throws if the account is disabled.
+ * seeded/known users — or creates a new one defaulting to Viewer (owner emails
+ * become Admin). Stores the Firebase UID and stamps last_login. Roles always
+ * live in this profile store, never in Firebase. Throws if the account is disabled.
  */
 export async function linkFirebaseUser(
   firebaseUid: string,
@@ -131,16 +143,19 @@ export async function linkFirebaseUser(
 ): Promise<User> {
   return delay(
     mutate((db) => {
+      const isOwner = OWNER_EMAILS.has(email.toLowerCase());
       let u = db.users.find((x) => x.email.toLowerCase() === email.toLowerCase());
       if (!u) {
         u = {
           id: uid(),
           name: displayName || email.split("@")[0],
           email,
-          role: "viewer", // new accounts are Viewer until an admin elevates them
+          // new accounts are Viewer until an admin elevates them — owners are Admin
+          role: isOwner ? "admin" : "viewer",
           status: "active",
           firebase_uid: firebaseUid,
           email_verified: emailVerified ?? false,
+          last_role_update: isOwner ? nowISO() : null,
           created_at: nowISO(),
           updated_at: nowISO(),
           last_login: nowISO(),
@@ -152,11 +167,24 @@ export async function linkFirebaseUser(
           action: "create",
           new_values: { name: u.name, email: u.email, role: u.role },
           performed_by: null,
-          notes: `Firebase sign-up ${u.email} (default Viewer)`,
+          notes: `Firebase sign-up ${u.email} (${isOwner ? "owner → Admin" : "default Viewer"})`,
         });
       } else {
         u.firebase_uid = firebaseUid;
         if (emailVerified !== undefined) u.email_verified = emailVerified;
+        // Ensure owners are always Admin, even if a prior sign-up made them Viewer.
+        if (isOwner && u.role !== "admin") {
+          u.role = "admin";
+          u.last_role_update = nowISO();
+          recordAudit(db, {
+            entity_type: "user",
+            entity_id: u.id,
+            action: "update",
+            new_values: { role: "admin" },
+            performed_by: null,
+            notes: `Owner ${u.email} elevated to Admin`,
+          });
+        }
         u.last_login = nowISO();
         u.updated_at = nowISO();
       }
