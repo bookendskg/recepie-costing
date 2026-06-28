@@ -11,6 +11,14 @@ const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const isSupabaseConfigured = Boolean(url && anonKey);
 
 /**
+ * Phase 2 data backend (materials/recipes/yields/wastage) — OPT-IN and separate
+ * from auth so enabling Supabase auth doesn't silently swap the whole data layer
+ * onto the (newer) Supabase repos. Set VITE_DATA_BACKEND=supabase to turn it on.
+ */
+export const isSupabaseDataBackend =
+  isSupabaseConfigured && import.meta.env.VITE_DATA_BACKEND === "supabase";
+
+/**
  * The Supabase client, or `null` in mock mode. Feature code must NOT import this
  * directly — go through `src/lib/auth/session.ts` and `src/lib/supabase/profile.ts`
  * so the mock fallback stays centralized.
