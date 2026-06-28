@@ -286,7 +286,7 @@ export const recipesRepo = {
             db.recipe_ingredients.push({
               id: uid(), recipe_id: recipeId, ingredient_id: ensureMat(l.ingredient_name),
               component_type: "material", quantity_used: l.quantity, unit_used: l.unit,
-              calculated_cost: null, sort_order: idx,
+              calculated_cost: null, sort_order: idx, wastage_override_pct: null, cut_type: null,
             }),
           );
         };

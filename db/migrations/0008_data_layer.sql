@@ -23,6 +23,10 @@ alter table public.recipe_ingredients
 alter table public.wastage_entries
   add column if not exists done_by text;
 
+-- audit_logs.entity_id holds app entity ids INCLUDING non-uuid markers (e.g. the
+-- literal 'import' for bulk operations), so it must be text, not uuid.
+alter table public.audit_logs alter column entity_id type text using entity_id::text;
+
 create index if not exists recipes_parent_idx on public.recipes (parent_recipe_id);
 
 -- ── 2. Drop legacy FKs to public.users (actor columns now hold auth uids) ───
