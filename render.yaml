@@ -9,6 +9,21 @@ services:
     # Vite reads VITE_* at BUILD time — set these in the Render dashboard
     # (Environment) before the first deploy, or sync: false will prompt for them.
     envVars:
+      # Firebase web config — primary auth. Public-by-design (not secrets), but
+      # Vite inlines them at BUILD time, so set them before the first deploy.
+      - key: VITE_FIREBASE_API_KEY
+        sync: false
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        sync: false
+      - key: VITE_FIREBASE_PROJECT_ID
+        sync: false
+      - key: VITE_FIREBASE_STORAGE_BUCKET
+        sync: false
+      - key: VITE_FIREBASE_MESSAGING_SENDER_ID
+        sync: false
+      - key: VITE_FIREBASE_APP_ID
+        sync: false
+      # Supabase — data layer / fallback auth.
       - key: VITE_SUPABASE_URL
         sync: false
       - key: VITE_SUPABASE_ANON_KEY
