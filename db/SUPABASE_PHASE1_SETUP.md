@@ -57,6 +57,35 @@ the app falls back to the local mock layer (seed users), so local dev still work
 3. As a non-admin, hit the profile-update API with a role change → rejected by RLS/trigger.
 4. Try to demote the last admin → rejected.
 
+## Roles (3) + seeding an account for each
+
+Roles are **Admin / Editor / Viewer** (enum `app_role` in 0007):
+- **Admin** — everything: manage users, roles, dashboard access, approvals, settings.
+- **Editor** — edit recipes, raw materials, prices, yield, wastage; import; reports.
+- **Viewer** — read-only (approved recipes in their permitted brands).
+
+Supabase can't mint auth users from the browser, so seed a role account like this:
+1. Create each auth user — **Supabase → Authentication → Users → Add user** (set a
+   password, mark email confirmed), *or* have the person use **"Create one"** in the app.
+2. Each gets a `user_profiles` row automatically (Viewer, pending). Assign roles by email
+   in the **SQL Editor**:
+   ```sql
+   update public.user_profiles set role='admin',  approved=true, status='active', dashboard_access=true
+     where lower(email) = 'admin@yourco.com';
+   update public.user_profiles set role='editor', approved=true, status='active'
+     where lower(email) = 'editor@yourco.com';
+   update public.user_profiles set role='viewer', approved=true, status='active'
+     where lower(email) = 'viewer@yourco.com';
+   ```
+   (Owner emails auto-become Admin on first confirmed sign-in — no SQL needed for them.)
+
+## Phase 2 data layer (optional, opt-in)
+
+Once auth is verified, to also move materials/recipes/yields/wastage to Supabase: run
+`db/migrations/0008_data_layer.sql`, then set `VITE_DATA_BACKEND=supabase` and rebuild.
+This is newer/unverified-against-live — smoke-test before relying on it. Unset the flag to
+revert the data layer to mock.
+
 ## Rollback
 
 Remove the Supabase env vars and rebuild → the app returns to the mock users layer. The

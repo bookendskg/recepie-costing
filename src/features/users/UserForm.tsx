@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { userSchema, type UserValues } from "@/lib/validation/schemas";
 import { toast } from "@/components/ui/use-toast";
-import { BRANDS, ROLE_LABELS, outletsForBrand, type Brand, type User } from "@/lib/data/types";
+import { ROLE_LABELS, type User } from "@/lib/data/types";
 import { useCreateUser, useUpdateUser } from "./hooks";
 
 export function UserForm({
@@ -47,7 +47,7 @@ export function UserForm({
     formState: { errors },
   } = useForm<UserValues>({
     resolver: zodResolver(userSchema),
-    defaultValues: { name: "", email: "", role: "rnd", status: "active", password: "" },
+    defaultValues: { name: "", email: "", role: "editor", status: "active", password: "" },
   });
 
   useEffect(() => {
@@ -59,21 +59,15 @@ export function UserForm({
               email: user.email,
               role: user.role,
               status: user.status,
-              assigned_brand: user.assigned_brand ?? null,
-              assigned_outlet: user.assigned_outlet ?? null,
               password: "",
             }
-          : { name: "", email: "", role: "rnd", status: "active", assigned_brand: null, assigned_outlet: null, password: "" },
+          : { name: "", email: "", role: "editor", status: "active", password: "" },
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, user]);
 
   const onSubmit = async (values: UserValues) => {
-    // Outlet scoping only applies to Outlet Manager / Staff; clear it otherwise.
-    const scoped = values.role === "outlet_manager" || values.role === "staff";
-    const assigned_brand = scoped ? values.assigned_brand ?? null : null;
-    const assigned_outlet = scoped ? values.assigned_outlet ?? null : null;
     try {
       if (isEdit && user) {
         await updateMut.mutateAsync({
@@ -83,8 +77,6 @@ export function UserForm({
             email: values.email,
             role: values.role,
             status: values.status,
-            assigned_brand,
-            assigned_outlet,
             password: values.password || undefined,
           },
         });
@@ -99,8 +91,6 @@ export function UserForm({
           email: values.email,
           role: values.role,
           status: values.status,
-          assigned_brand,
-          assigned_outlet,
           password: values.password,
         });
         toast.success("User created");
@@ -142,9 +132,7 @@ export function UserForm({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">{ROLE_LABELS.admin}</SelectItem>
-                  <SelectItem value="rnd">{ROLE_LABELS.rnd}</SelectItem>
-                  <SelectItem value="outlet_manager">{ROLE_LABELS.outlet_manager}</SelectItem>
-                  <SelectItem value="staff">{ROLE_LABELS.staff}</SelectItem>
+                  <SelectItem value="editor">{ROLE_LABELS.editor}</SelectItem>
                   <SelectItem value="viewer">{ROLE_LABELS.viewer}</SelectItem>
                 </SelectContent>
               </Select>
@@ -162,49 +150,6 @@ export function UserForm({
               </Select>
             </div>
           </div>
-          {(watch("role") === "outlet_manager" || watch("role") === "staff") && (
-            <div className="grid grid-cols-2 gap-3 rounded-md border border-border/60 bg-muted/30 p-3">
-              <div className="space-y-1.5">
-                <Label>Assigned Brand</Label>
-                <Select
-                  value={watch("assigned_brand") ?? "none"}
-                  onValueChange={(v) => {
-                    setValue("assigned_brand", v === "none" ? null : (v as Brand));
-                    setValue("assigned_outlet", null);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Any brand" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Any brand</SelectItem>
-                    {BRANDS.map((b) => (
-                      <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Assigned Outlet</Label>
-                <Select
-                  value={watch("assigned_outlet") ?? "none"}
-                  onValueChange={(v) => setValue("assigned_outlet", v === "none" ? null : v)}
-                  disabled={!watch("assigned_brand")}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Any outlet" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Any outlet</SelectItem>
-                    {watch("assigned_brand") &&
-                      outletsForBrand(watch("assigned_brand") as Brand).map((o) => (
-                        <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
           <div className="space-y-1.5">
             <Label>{isEdit ? "New Password (optional)" : "Temporary Password *"}</Label>
             <Input type="password" autoComplete="new-password" {...register("password")} />

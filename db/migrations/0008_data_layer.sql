@@ -53,24 +53,13 @@ $$;
 
 create or replace function public.can_write_catalog()
 returns boolean language sql security definer stable set search_path = public as $$
-  select public.app_role() in ('admin','rnd')
+  select public.app_role() in ('admin','editor')
 $$;
 
--- Can the caller act on this outlet's operational data?
+-- Can the caller act on this outlet's operational data? Admin + Editor only.
 create or replace function public.can_access_outlet(p_outlet text)
 returns boolean language sql security definer stable set search_path = public as $$
-  select case
-    when public.app_role() in ('admin','rnd') then true
-    when public.app_role() in ('outlet_manager','staff') then exists (
-      select 1 from public.user_profiles up
-      where up.id = auth.uid() and (
-        up.assigned_outlet = p_outlet
-        or (up.assigned_outlet is null and up.assigned_brand = (select brand from public.outlets where id = p_outlet))
-        or (up.assigned_outlet is null and up.assigned_brand is null)
-      )
-    )
-    else false
-  end
+  select public.app_role() in ('admin','editor')
 $$;
 
 -- Brands a viewer may see (mirrors viewerBrands()): null accessible_brands = all.
@@ -97,9 +86,9 @@ alter table public.recipes enable row level security;
 drop policy if exists viewer_recipe_access on public.recipes;
 drop policy if exists recipes_read  on public.recipes;
 drop policy if exists recipes_write on public.recipes;
--- Staff roles see everything; viewers see only approved recipes in their brands.
+-- Admin/Editor see everything; viewers see only approved recipes in their brands.
 create policy recipes_read on public.recipes for select to authenticated using (
-  public.app_role() in ('admin','rnd','outlet_manager','staff')
+  public.app_role() in ('admin','editor')
   or (public.app_role() = 'viewer' and status = 'approved' and public.viewer_can_see_brand(brand))
 );
 create policy recipes_write on public.recipes for all to authenticated
@@ -137,11 +126,11 @@ drop policy if exists wastage_delete  on public.wastage_entries;
 create policy wastage_read   on public.wastage_entries for select to authenticated
   using (public.can_access_outlet(outlet_id));
 create policy wastage_insert on public.wastage_entries for insert to authenticated
-  with check (public.app_role() in ('admin','rnd','outlet_manager','staff') and public.can_access_outlet(outlet_id));
+  with check (public.app_role() in ('admin','editor'));
 create policy wastage_update on public.wastage_entries for update to authenticated
   using (public.can_access_outlet(outlet_id)) with check (public.can_access_outlet(outlet_id));
 create policy wastage_delete on public.wastage_entries for delete to authenticated
-  using (public.app_role() in ('admin','rnd'));
+  using (public.app_role() in ('admin','editor'));
 
 -- ── 10. RLS: history / versions / audit / settings ─────────────────────────
 alter table public.recipe_cost_history     enable row level security;

@@ -19,9 +19,7 @@ import {
 
 const DEMO = [
   { role: "Admin", email: "rahul@brand.com" },
-  { role: "R&D", email: "priya@brand.com" },
-  { role: "Outlet Manager", email: "marco@brand.com" },
-  { role: "Staff", email: "sara@brand.com" },
+  { role: "Editor", email: "priya@brand.com" },
   { role: "Viewer", email: "amit@brand.com" },
 ];
 

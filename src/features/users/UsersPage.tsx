@@ -30,17 +30,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { toast } from "@/components/ui/use-toast";
-import { OUTLETS, ROLE_LABELS, type User } from "@/lib/data/types";
+import { ROLE_LABELS, type User } from "@/lib/data/types";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { sendPasswordReset } from "@/lib/supabase/profile";
 import { useUpdateUser, useUsers } from "./hooks";
 import { UserForm } from "./UserForm";
 import { AssignAccessDialog } from "@/features/viewers/AssignAccessDialog";
-
-const outletLabel = (id?: string | null) => {
-  const o = OUTLETS.find((x) => x.id === id);
-  return o ? o.name : null;
-};
 
 const fmtDate = (iso?: string | null) => {
   if (!iso) return "Never";
@@ -185,7 +180,6 @@ export function UsersPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead className="hidden lg:table-cell">Assigned</TableHead>
                 <TableHead>Account</TableHead>
                 <TableHead className="hidden md:table-cell">Last Login</TableHead>
                 <TableHead className="w-10" />
@@ -193,8 +187,6 @@ export function UsersPage() {
             </TableHeader>
             <TableBody>
               {filtered.map((u) => {
-                const outlet = outletLabel(u.assigned_outlet);
-                const scoped = u.role === "outlet_manager" || u.role === "staff";
                 return (
                 <TableRow key={u.id}>
                   <TableCell className="font-medium">{u.name}</TableCell>
@@ -212,9 +204,6 @@ export function UsersPage() {
                     )}
                   </TableCell>
                   <TableCell>{ROLE_LABELS[u.role]}</TableCell>
-                  <TableCell className="hidden lg:table-cell text-muted-foreground">
-                    {scoped ? outlet ?? "All outlets" : "—"}
-                  </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap items-center gap-1">
                       {u.approved === false ? (

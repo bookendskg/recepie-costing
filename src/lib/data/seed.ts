@@ -78,10 +78,8 @@ const U_VIEWER = "u-viewer";
 
 const users: User[] = [
   { id: U_ADMIN, name: "Rahul Sharma", email: "rahul@brand.com", role: "admin", status: "active", approved: true, email_verified: true, dashboard_access: true, password: "password123", created_at: SEED_TS, updated_at: SEED_TS },
-  { id: U_EDITOR, name: "Priya Patel", email: "priya@brand.com", role: "rnd", status: "active", approved: true, email_verified: true, password: "password123", created_at: SEED_TS, updated_at: SEED_TS },
-  { id: "u-headchef", name: "Marco Bianchi", email: "marco@brand.com", role: "outlet_manager", status: "active", approved: true, email_verified: true, password: "password123", created_at: SEED_TS, updated_at: SEED_TS },
-  { id: "u-chef", name: "Sara Khan", email: "sara@brand.com", role: "staff", status: "active", approved: true, email_verified: true, password: "password123", created_at: SEED_TS, updated_at: SEED_TS },
-  { id: U_VIEWER, name: "Amit Roy", email: "amit@brand.com", role: "viewer", status: "active", approved: true, email_verified: true, accessible_brands: ["aiko"], show_cost: true, password: "password123", created_at: SEED_TS, updated_at: SEED_TS },
+  { id: U_EDITOR, name: "Priya Patel", email: "priya@brand.com", role: "editor", status: "active", approved: true, email_verified: true, password: "password123", created_at: SEED_TS, updated_at: SEED_TS },
+  { id: U_VIEWER, name: "Amit Roy", email: "amit@brand.com", role: "viewer", status: "active", approved: true, email_verified: true, password: "password123", created_at: SEED_TS, updated_at: SEED_TS },
 ];
 
 // --- Leaf raw materials (₹ per gram) ---------------------------------------

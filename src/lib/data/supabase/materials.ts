@@ -2,7 +2,7 @@
 // mock `materialsRepo` interface 1:1 so feature code is unchanged — src/lib/data/index.ts
 // selects between mock and Supabase by whether Supabase is configured. Backed by
 // public.raw_materials + public.ingredient_price_history (db/migrations/0001, 0008);
-// access is enforced by RLS (can_write_catalog → admin/rnd).
+// access is enforced by RLS (can_write_catalog → admin/editor).
 //
 // A row's own derived field (cost_per_base_unit) is computed with the SAME pure
 // helper the mock uses (calculateCostPerBaseUnit); the recipe price cascade reuses

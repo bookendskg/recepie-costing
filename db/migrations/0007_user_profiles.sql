@@ -15,7 +15,7 @@
 -- This supersedes the legacy public.profiles (0002); that table is left untouched/unused.
 
 do $$ begin
-  create type app_role as enum ('admin','rnd','outlet_manager','staff','viewer');
+  create type app_role as enum ('admin','editor','viewer');
 exception when duplicate_object then null; end $$;
 
 do $$ begin

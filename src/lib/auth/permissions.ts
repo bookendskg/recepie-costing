@@ -6,7 +6,6 @@
 import {
   BRANDS,
   OUTLETS,
-  outletsForBrand,
   type Brand,
   type Outlet,
   type Recipe,
@@ -64,8 +63,8 @@ const MATRIX: Record<Role, Capability[]> = {
     "report.excel",
     "audit.view",
   ],
-  // R&D (§10): manages recipes, ingredients, pricing, yield; imports costing data.
-  rnd: [
+  // Editor: manages recipes, raw materials, pricing, yield, wastage; imports data.
+  editor: [
     "material.view",
     "material.edit",
     "yield.manage",
@@ -78,15 +77,6 @@ const MATRIX: Record<Role, Capability[]> = {
     "viewer.assign",
     "report.excel",
   ],
-  // Outlet Manager (§10): views the assigned outlet, records/approves outlet wastage.
-  outlet_manager: [
-    "material.view",
-    "wastage.create",
-    "recipe.viewAll",
-    "report.excel",
-  ],
-  // Staff (§10): records permitted outlet wastage; limited viewing.
-  staff: ["material.view", "wastage.create", "recipe.viewAll"],
   viewer: [],
 };
 
@@ -95,10 +85,10 @@ export function can(role: Role | undefined, cap: Capability): boolean {
   return MATRIX[role].includes(cap);
 }
 
-/** Can this user edit this specific recipe? Admin/R&D, else the creator. */
+/** Can this user edit this specific recipe? Admin/Editor, else the creator. */
 export function canEditRecipe(user: User | null, recipe: Recipe): boolean {
   if (!user) return false;
-  if (user.role === "admin" || user.role === "rnd") return true;
+  if (user.role === "admin" || user.role === "editor") return true;
   return recipe.created_by === user.id;
 }
 
@@ -196,32 +186,19 @@ export function isPendingApproval(user: User | null): boolean {
   return user.approved === false && user.role !== "admin";
 }
 
-// --- Brand / outlet scope (§6/§11/§12) ------------------------------------
-// Admin and R&D operate across everything. Outlet Manager / Staff are confined
-// to their assigned outlet (or all outlets of their assigned brand if no single
-// outlet is set). Viewers follow their accessible_brands grant.
+// --- Brand / outlet scope ------------------------------------------------
+// Admin + Editor operate across everything; Viewers follow their accessible_brands.
 
 /** Brands a user may act within (for scoping selectors + data). */
 export function userBrands(user: User | null): Brand[] {
   if (!user) return [];
   if (user.role === "viewer") return user.accessible_brands ?? ALL_BRANDS;
-  if (user.role === "outlet_manager" || user.role === "staff") {
-    return user.assigned_brand ? [user.assigned_brand] : ALL_BRANDS;
-  }
-  return ALL_BRANDS; // admin, rnd
+  return ALL_BRANDS; // admin, editor
 }
 
-/** Outlets a user may act within. */
+/** Outlets a user may act within (all for admin/editor; brand-scoped for viewers). */
 export function accessibleOutlets(user: User | null): Outlet[] {
   if (!user) return [];
-  if (user.role === "outlet_manager" || user.role === "staff") {
-    if (user.assigned_outlet) {
-      const o = OUTLETS.find((x) => x.id === user.assigned_outlet);
-      return o ? [o] : [];
-    }
-    if (user.assigned_brand) return outletsForBrand(user.assigned_brand);
-    return OUTLETS;
-  }
   const brands = userBrands(user);
   return OUTLETS.filter((o) => brands.includes(o.brand));
 }
@@ -234,15 +211,8 @@ export function canAccessBrand(user: User | null, brand: Brand): boolean {
   return userBrands(user).includes(brand);
 }
 
-/** True when the user is confined to a subset of outlets (outlet roles). */
-export function isOutletScoped(user: User | null): boolean {
-  return !!user && (user.role === "outlet_manager" || user.role === "staff");
-}
-
 export const HOME_BY_ROLE: Record<Role, string> = {
   admin: "/dashboard",
-  rnd: "/dashboard",
-  outlet_manager: "/dashboard",
-  staff: "/dashboard",
+  editor: "/dashboard",
   viewer: "/dashboard",
 };
