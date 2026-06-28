@@ -87,6 +87,16 @@ export const usersRepo = {
         if (!u) throw new Error("User not found");
         const before = { name: u.name, email: u.email, role: u.role, status: u.status };
         const roleChanged = patch.role !== undefined && patch.role !== u.role;
+        // §28 privilege-escalation safeguards.
+        if (roleChanged && id === actorId) {
+          throw new Error("You cannot change your own role");
+        }
+        const isActiveAdmin = (x: typeof u) => x.role === "admin" && x.status === "active" && x.approved !== false;
+        const demotingAdmin = u.role === "admin" && roleChanged && patch.role !== "admin";
+        const disablingAdmin = u.role === "admin" && patch.status === "inactive";
+        if ((demotingAdmin || disablingAdmin) && db.users.filter(isActiveAdmin).length <= 1) {
+          throw new Error("Cannot remove the last remaining Admin");
+        }
         if (patch.name !== undefined) u.name = patch.name;
         if (patch.email !== undefined) u.email = patch.email;
         if (patch.role !== undefined) u.role = patch.role;

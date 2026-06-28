@@ -117,8 +117,8 @@ export function UsersPage() {
   return (
     <>
       <PageHeader
-        title="Users"
-        description="Manage accounts, roles, and viewer access"
+        title="User Management"
+        description="Manage accounts, roles, verification, and brand/outlet access"
         actions={
           <Button
             variant="accent"
@@ -206,8 +206,8 @@ export function UsersPage() {
                       )}
                     </div>
                     {u.firebase_uid && (
-                      <span className="text-[10px] uppercase tracking-wide text-muted-foreground/70">
-                        Firebase linked
+                      <span className="block font-mono text-[10px] text-muted-foreground/70" title={u.firebase_uid}>
+                        UID {u.firebase_uid.slice(0, 12)}…
                       </span>
                     )}
                   </TableCell>

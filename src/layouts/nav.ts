@@ -38,7 +38,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/approvals", label: "Approvals", icon: CheckCircle2, group: "Operations", roles: ["admin"] },
   { to: "/reports", label: "Reports", icon: FileBarChart, group: "Operations", roles: ["admin", "rnd", "outlet_manager"] },
   { to: "/viewer-access", label: "Viewer Access", icon: Eye, group: "Operations", roles: ["admin", "rnd", "outlet_manager"] },
-  { to: "/users", label: "Users", icon: Users, group: "Admin", roles: ["admin"] },
+  { to: "/users", label: "User Management", icon: Users, group: "Admin", roles: ["admin"] },
   { to: "/audit", label: "Price Changes", icon: ScrollText, group: "Admin", roles: ["admin"] },
   { to: "/settings", label: "Settings", icon: Settings, group: "Admin", roles: ["admin"] },
 ];
