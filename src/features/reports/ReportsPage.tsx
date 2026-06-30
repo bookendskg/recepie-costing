@@ -58,6 +58,9 @@ export function ReportsPage() {
   const filtered = useMemo(
     () =>
       recipes.filter((r) => {
+        // Show one row per recipe — hide size-variant children (e.g. the 11" pizza
+        // that pairs each 15" master), which otherwise read as duplicate entries.
+        if (r.parent_recipe_id) return false;
         if (brand !== "all" && r.brand !== brand) return false;
         if (search && !r.recipe_name.toLowerCase().includes(search.toLowerCase())) return false;
         if (status !== "all" && r.status !== status) return false;
