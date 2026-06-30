@@ -61,7 +61,9 @@ export function MasterCostingDashboard({ brand }: { brand: BrandSelection }) {
   }, [allIngredients]);
 
   const data = useMemo(() => {
-    const items = recipes.filter((r) => !r.is_prep && (brand === "all" || r.brand === brand));
+    // One row per recipe — exclude size-variant children (the 11" that pairs each
+    // 15" master) so pizzas don't appear as duplicate entries.
+    const items = recipes.filter((r) => !r.is_prep && !r.parent_recipe_id && (brand === "all" || r.brand === brand));
     const rows: Row[] = items.map((r) => {
       const making = r.cost_per_portion ?? 0;
       const pkg = r.packaging_cost ?? 0;
@@ -104,7 +106,7 @@ export function MasterCostingDashboard({ brand }: { brand: BrandSelection }) {
 
     const lastUpdated = rows.length
       ? recipes
-          .filter((r) => !r.is_prep && (brand === "all" || r.brand === brand))
+          .filter((r) => !r.is_prep && !r.parent_recipe_id && (brand === "all" || r.brand === brand))
           .reduce((acc, r) => (r.updated_at > acc ? r.updated_at : acc), "")
       : "";
 

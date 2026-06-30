@@ -527,9 +527,14 @@ export function RecipeDetailPage() {
                         <FinRow label="Full Cost / Portion" value={formatINR(fullCpp)} />
                       </>
                     )}
-                    <FinRow label={`Suggested Price (${foodCostPct}% food cost)`} value={formatINR(round2(fullCpp / (foodCostPct / 100)))} strong />
-                    <FinRow label="Menu Price" value={formatINR(menuPrice)} />
-                    <FinRow label="Gross Margin" value={`${marginPct}%`} />
+                    {/* In-house preps are internal sub-recipes — no menu price / margin. */}
+                    {!recipe.is_prep && (
+                      <>
+                        <FinRow label={`Suggested Price (${foodCostPct}% food cost)`} value={formatINR(round2(fullCpp / (foodCostPct / 100)))} strong />
+                        <FinRow label="Menu Price" value={formatINR(menuPrice)} />
+                        <FinRow label="Gross Margin" value={`${marginPct}%`} />
+                      </>
+                    )}
                   </div>
                 </TabsContent>
               )}
@@ -585,6 +590,9 @@ export function RecipeDetailPage() {
                   )}
                 </div>
 
+                {/* Margin / selling price / efficiency — not applicable to in-house preps. */}
+                {!recipe.is_prep && (
+                  <>
                 <div className="my-4 grid grid-cols-2 gap-3 rounded-lg bg-emerald-50 p-3">
                   <div>
                     <p className="text-[10px] font-semibold uppercase text-muted-foreground">Current Margin</p>
@@ -643,8 +651,11 @@ export function RecipeDetailPage() {
                     <div className="h-full rounded-full bg-emerald-600" style={{ width: `${efficiency}%` }} />
                   </div>
                 </div>
+                  </>
+                )}
               </Card>
 
+              {!recipe.is_prep && (
               <Card className="border-red-200 bg-red-50 p-4">
                 <div className="flex gap-3">
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
@@ -656,6 +667,7 @@ export function RecipeDetailPage() {
                   </div>
                 </div>
               </Card>
+              )}
             </>
           ) : (
             <Card className="p-5 text-sm text-muted-foreground">

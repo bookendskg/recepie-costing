@@ -373,21 +373,24 @@ export function RecipeEditorPage() {
                 />
               </div>
             </div>
-            {/* Recipes are single-portion: serving size is fixed at 1. */}
-            <div className="space-y-1.5">
-              <Label>Menu Price (₹)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                placeholder="Leave blank to use the suggested price"
-                {...register("selling_price", {
-                  setValueAs: (v) => (v === "" || v === null ? null : Number(v)),
-                })}
-              />
-              <p className="text-xs text-muted-foreground">
-                The actual menu price. Drives the food cost % shown on the recipe list.
-              </p>
-            </div>
+            {/* Recipes are single-portion: serving size is fixed at 1.
+                In-house preps are internal sub-recipes — no menu price. */}
+            {!effectiveIsPrep && (
+              <div className="space-y-1.5">
+                <Label>Menu Price (₹)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="Leave blank to use the suggested price"
+                  {...register("selling_price", {
+                    setValueAs: (v) => (v === "" || v === null ? null : Number(v)),
+                  })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  The actual menu price. Drives the food cost % shown on the recipe list.
+                </p>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Wastage (%)</Label>
