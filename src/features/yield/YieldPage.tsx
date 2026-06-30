@@ -50,7 +50,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { formatINR, formatDate } from "@/lib/utils";
+import { cn, formatINR, formatDate } from "@/lib/utils";
 import { useSession } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
 import type { IngredientYield, RawMaterial } from "@/lib/data/types";
@@ -167,6 +167,7 @@ export function YieldPage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<IngredientYield | null>(null);
+  const [showMissing, setShowMissing] = useState(false);
   const [breakdownFor, setBreakdownFor] = useState<IngredientYield | null>(null);
   const [deleting, setDeleting] = useState<IngredientYield | null>(null);
   const [recipesForYield, setRecipesForYield] = useState<(IngredientYield & { material: RawMaterial | null }) | null>(null);
@@ -215,11 +216,11 @@ export function YieldPage() {
     const wastageCost = yields.reduce((s, y) => s + y.wastage_quantity * y.original_unit_cost, 0);
     // A yield can be created before its purchase price is known. Flag only those
     // (NOT every raw material that lacks a yield — that was ~795 rows of noise).
-    const missing = yields.filter((y) => {
+    const missingItems = yields.filter((y) => {
       const m = matById.get(y.ingredient_id);
       return (y.purchase_cost ?? 0) <= 0 || m == null || m.cost_per_base_unit == null;
-    }).length;
-    return { n, avgYield, avgWastage, wastageCost, missing };
+    });
+    return { n, avgYield, avgWastage, wastageCost, missing: missingItems.length, missingItems };
   }, [yields, matById]);
 
   const toggleSort = (key: SortKey) =>
@@ -279,6 +280,7 @@ export function YieldPage() {
           icon={<TriangleAlert className="h-4 w-4 text-amber-500" />}
           label="Yields Missing Price"
           value={String(stats.missing)}
+          onClick={stats.missing > 0 ? () => setShowMissing(true) : undefined}
         />
       </div>
 
@@ -412,6 +414,32 @@ export function YieldPage() {
 
       <ImportDialog open={importOpen} onOpenChange={setImportOpen} config={importConfig} />
       <YieldForm open={formOpen} onOpenChange={setFormOpen} record={editing} />
+
+      {/* Drill-in: the yields counted as "Missing Price" */}
+      <Dialog open={showMissing} onOpenChange={setShowMissing}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Yields missing a price — {stats.missing}</DialogTitle>
+            <DialogDescription>
+              A yield exists but its ingredient has no purchase price. Tap one to add the price.
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="divide-y">
+            {stats.missingItems.map((y) => (
+              <li key={y.id}>
+                <button
+                  type="button"
+                  onClick={() => { setShowMissing(false); setEditing(y); setFormOpen(true); }}
+                  className="flex w-full items-center justify-between gap-3 py-2 text-left text-sm hover:text-emerald-700"
+                >
+                  <span className="font-medium">{matById.get(y.ingredient_id)?.ingredient_name ?? "—"}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">yield {y.yield_percentage}%</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </DialogContent>
+      </Dialog>
       <YieldBreakdownDialog
         record={breakdownFor}
         material={breakdownFor ? matById.get(breakdownFor.ingredient_id) ?? null : null}
@@ -471,10 +499,16 @@ export function YieldPage() {
   );
 }
 
-function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function Stat({ icon, label, value, onClick }: { icon: React.ReactNode; label: string; value: string; onClick?: () => void }) {
   return (
-    <Card className="p-4">
-      <div className="mb-1 flex items-center gap-2 text-sm text-muted-foreground">{icon}{label}</div>
+    <Card
+      className={cn("p-4", onClick && "cursor-pointer transition-colors hover:bg-muted/50")}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } : undefined}
+    >
+      <div className="mb-1 flex items-center gap-2 text-sm text-muted-foreground">{icon}{label}{onClick && <span className="text-muted-foreground/70">›</span>}</div>
       <div className="text-2xl font-bold">{value}</div>
     </Card>
   );

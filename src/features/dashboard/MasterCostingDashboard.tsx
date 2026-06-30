@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn, formatINR, formatDate } from "@/lib/utils";
 import { round2 } from "@/lib/costing";
 import { canConvert, getConversionFactor } from "@/lib/units";
@@ -46,6 +47,7 @@ interface Row {
 
 export function MasterCostingDashboard({ brand }: { brand: BrandSelection }) {
   const navigate = useNavigate();
+  const [showMissing, setShowMissing] = useState(false);
   const { data: recipes = [], isLoading } = useRecipes();
   const { data: allIngredients = [] } = useAllRecipeIngredients();
 
@@ -117,6 +119,7 @@ export function MasterCostingDashboard({ brand }: { brand: BrandSelection }) {
       avgWithout: avg(rows, (r) => r.fcWithout),
       highCost: rows.filter((r) => r.fcWith != null && r.fcWith > HIGH_FC).length,
       missing: rows.filter((r) => r.missing).length,
+      missingItems: rows.filter((r) => r.missing).map((r) => ({ id: r.id, name: r.name, category: r.category })),
       lastUpdated,
     };
   }, [recipes, brand, weightByRecipe]);
@@ -151,8 +154,39 @@ export function MasterCostingDashboard({ brand }: { brand: BrandSelection }) {
         <Kpi label="Avg FC % With Pkg" value={`${data.avgWith.toFixed(2)}%`} accent={accent} />
         <Kpi label="Avg FC % Without Pkg" value={`${data.avgWithout.toFixed(2)}%`} accent={accent} />
         <Kpi label="High Cost Items" value={String(data.highCost)} tone={data.highCost > 0 ? "high" : undefined} />
-        <Kpi label="Missing Data" value={String(data.missing)} tone={data.missing > 0 ? "warn" : undefined} />
+        <Kpi
+          label="Missing Data"
+          value={String(data.missing)}
+          tone={data.missing > 0 ? "warn" : undefined}
+          onClick={data.missing > 0 ? () => setShowMissing(true) : undefined}
+        />
       </div>
+
+      {/* Drill-in: the recipes counted as "Missing Data" */}
+      <Dialog open={showMissing} onOpenChange={setShowMissing}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Missing data — {data.missing} recipe(s)</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            No food cost or selling price yet, so these are excluded from the averages. Tap one to open and fix it.
+          </p>
+          <ul className="divide-y">
+            {data.missingItems.map((r) => (
+              <li key={r.id}>
+                <button
+                  type="button"
+                  onClick={() => { setShowMissing(false); navigate(`/recipes/${r.id}`); }}
+                  className="flex w-full items-center justify-between gap-3 py-2 text-left text-sm hover:text-emerald-700"
+                >
+                  <span className="font-medium">{r.name}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{r.category}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
         {/* Costing table */}
@@ -298,11 +332,17 @@ function CategoryGroup({ name, children }: { name: string; children: React.React
   );
 }
 
-function Kpi({ label, value, accent, tone }: { label: string; value: string; accent?: string; tone?: "high" | "warn" }) {
+function Kpi({ label, value, accent, tone, onClick }: { label: string; value: string; accent?: string; tone?: "high" | "warn"; onClick?: () => void }) {
   const valueColor = tone === "high" ? "text-red-600 dark:text-red-400" : tone === "warn" ? "text-amber-600 dark:text-amber-400" : accent;
   return (
-    <Card className="p-4">
-      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+    <Card
+      className={cn("p-4", onClick && "cursor-pointer transition-colors hover:bg-muted/50")}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } : undefined}
+    >
+      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}{onClick && <span className="ml-1 text-muted-foreground/70">›</span>}</p>
       <p className={cn("mt-1 text-2xl font-bold", valueColor)}>{value}</p>
     </Card>
   );
