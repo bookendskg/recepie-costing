@@ -48,7 +48,7 @@ export function WastagePage() {
   const canEdit = can(user.role, "wastage.create");
   const myBrands = userBrands(user);
   const myOutlets = accessibleOutlets(user);
-  const { data: entries = [], isLoading } = useWastage();
+  const { data: entries = [], isLoading, error } = useWastage();
   const { data: materials = [] } = useMaterials();
   const { data: recipes = [] } = useRecipes();
   const deleteMut = useDeleteWastage();
@@ -62,6 +62,8 @@ export function WastagePage() {
   const [brand, setBrand] = useState("all");
   const [outlet, setOutlet] = useState("all");
   const [type, setType] = useState("all");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const [page, setPage] = useState(1);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -75,6 +77,10 @@ export function WastagePage() {
       if (brand !== "all" && w.brand !== brand) return false;
       if (outlet !== "all" && w.outlet_id !== outlet) return false;
       if (type !== "all" && w.wastage_type !== type) return false;
+      // §23 day-wise filter — inclusive local-day boundaries on the YYYY-MM-DD date.
+      const day = w.wastage_date.slice(0, 10);
+      if (from && day < from) return false;
+      if (to && day > to) return false;
       if (search) {
         const hay = `${itemName(w)} ${w.reason ?? ""}`.toLowerCase();
         if (!hay.includes(search.toLowerCase())) return false;
@@ -82,7 +88,7 @@ export function WastagePage() {
       return true;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries, brand, outlet, type, search, matById, recById, user]);
+  }, [entries, brand, outlet, type, from, to, search, matById, recById, user]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, pageCount);
@@ -92,9 +98,9 @@ export function WastagePage() {
   const stats = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
     const month = today.slice(0, 7);
-    const todayCost = entries.filter((w) => w.wastage_date === today).reduce((s, w) => s + w.total_cost, 0);
-    const monthCost = entries.filter((w) => w.wastage_date.slice(0, 7) === month).reduce((s, w) => s + w.total_cost, 0);
-    const totalCost = entries.reduce((s, w) => s + w.total_cost, 0);
+    const todayCost = filtered.filter((w) => w.wastage_date === today).reduce((s, w) => s + w.total_cost, 0);
+    const monthCost = filtered.filter((w) => w.wastage_date.slice(0, 7) === month).reduce((s, w) => s + w.total_cost, 0);
+    const totalCost = filtered.reduce((s, w) => s + w.total_cost, 0);
     const byOutletMap = new Map<string, number>();
     const byTypeMap = new Map<string, number>();
     const byBrandMap = new Map<string, number>();
@@ -102,7 +108,7 @@ export function WastagePage() {
     const byDayMap = new Map<string, number>();
     const recipeMap = new Map<string, number>();
     const ingredientMap = new Map<string, number>();
-    for (const w of entries) {
+    for (const w of filtered) {
       byOutletMap.set(w.outlet_id, (byOutletMap.get(w.outlet_id) ?? 0) + w.total_cost);
       byTypeMap.set(w.wastage_type, (byTypeMap.get(w.wastage_type) ?? 0) + w.total_cost);
       byBrandMap.set(w.brand, (byBrandMap.get(w.brand) ?? 0) + w.total_cost);
@@ -140,7 +146,7 @@ export function WastagePage() {
       daily,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries, materials, matById, recById]);
+  }, [filtered, materials, matById, recById]);
 
   const resetPage = () => setPage(1);
 
@@ -193,7 +199,7 @@ export function WastagePage() {
 
       {/* Filters */}
       <Card className="mb-4 p-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
           <Input placeholder="Search item / reason…" value={search} onChange={(e) => { setSearch(e.target.value); resetPage(); }} />
           <Select value={brand} onValueChange={(v) => { setBrand(v); setOutlet("all"); resetPage(); }}>
             <SelectTrigger><SelectValue placeholder="Brand" /></SelectTrigger>
@@ -218,11 +224,17 @@ export function WastagePage() {
               {WASTAGE_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
             </SelectContent>
           </Select>
+          <Input type="date" aria-label="From date" value={from} onChange={(e) => { setFrom(e.target.value); resetPage(); }} />
+          <Input type="date" aria-label="To date" value={to} onChange={(e) => { setTo(e.target.value); resetPage(); }} />
         </div>
       </Card>
 
       <Card>
-        {isLoading ? (
+        {error ? (
+          <div className="py-12 text-center text-sm text-destructive">
+            Unable to load wastage. Please refresh and try again.
+          </div>
+        ) : isLoading ? (
           <TableSkeleton rows={6} cols={6} />
         ) : filtered.length === 0 ? (
           <EmptyState
