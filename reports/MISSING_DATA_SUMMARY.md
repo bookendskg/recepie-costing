@@ -1,151 +1,216 @@
 # CostCraft — Missing Price Report
 
-Generated from the current catalogue. "Master" recipes only (11" size children excluded — fixing a price fixes both sizes).
+Generated from the current catalogue. Master recipes/preps only (11" size children excluded — fixing a price fixes both sizes).
 
 | Bucket | Count |
 |---|---|
-| Recipes with at least one unpriced ingredient | 59 |
-| Distinct ingredients that NEED A PRICE (raw/purchased) | 41 |
-| Distinct ingredients that should be a SUB-RECIPE (composite) | 91 |
+| Menu recipes with an unpriced ingredient | 59 |
+| Sub-recipes (preps) with an unpriced ingredient | 0 |
+| Raw ingredients that NEED A PRICE | 41 |
+| Composites that should be a SUB-RECIPE | 91 (3 already exist → link) |
 | Yields created without a price | 15 |
 
-## 1. Ingredients that need a price (fill the ₹/kg column)
-- **Nori** (Other) — used in 4 recipe(s)
-- **Chestnut** (Bakery) — used in 2 recipe(s)
-- **Ramen noodles** (Grains & Flour) — used in 2 recipe(s)
-- **1 ladle water** (Beverages) — used in 1 recipe(s)
-- **Bao** (Other) — used in 1 recipe(s)
-- **Bay leaf (remove before blending)** (Other) — used in 1 recipe(s)
-- **Black Vinegar** (Sauces & Condiments) — used in 1 recipe(s)
-- **Boiled linguini** (Oils & Fats) — used in 1 recipe(s)
-- **Broad Beans** (Other) — used in 1 recipe(s)
-- **Celery (diced)** (Beverages) — used in 1 recipe(s)
-- **Chilli Crisp (for chilli version)** (Spices) — used in 1 recipe(s)
-- **Cold water** (Beverages) — used in 1 recipe(s)
-- **Conchiglioni** (Grains & Flour) — used in 1 recipe(s)
-- **Cookies & cream ice cream** (Dairy) — used in 1 recipe(s)
-- **Cumin powder** (Spices) — used in 1 recipe(s)
-- **Flat noodles** (Grains & Flour) — used in 1 recipe(s)
-- **Fried glass noodles** (Grains & Flour) — used in 1 recipe(s)
-- **Granola (chopped)** (Bakery) — used in 1 recipe(s)
-- **Gunsberg Ginger Beer** (Vegetables) — used in 1 recipe(s)
-- **Hing** (Other) — used in 1 recipe(s)
-- **Julienne cut nori sheet** (Grains & Flour) — used in 1 recipe(s)
-- **Kinley Soda** (Beverages) — used in 1 recipe(s)
-- **Lasagna sheets (oven-ready)** (Grains & Flour) — used in 1 recipe(s)
-- **Maida noodles** (Grains & Flour) — used in 1 recipe(s)
-- **Mixed mushroom** (Vegetables) — used in 1 recipe(s)
-- **Nori half sheet** (Grains & Flour) — used in 1 recipe(s)
-- **Nori sheet** (Grains & Flour) — used in 1 recipe(s)
-- **Nori sheets** (Grains & Flour) — used in 1 recipe(s)
-- **Nutmeg** (Bakery) — used in 1 recipe(s)
-- **Pasta sheet 22 g x 2** (Grains & Flour) — used in 1 recipe(s)
-- **Peas** (Other) — used in 1 recipe(s)
-- **Pickled radish** (Other) — used in 1 recipe(s)
-- **Pickled red Bhavnagri** (Other) — used in 1 recipe(s)
-- **Plain mayonnaise** (Sauces & Condiments) — used in 1 recipe(s)
-- **Salt & black pepper** (Spices) — used in 1 recipe(s)
-- **Sichuan powder** (Spices) — used in 1 recipe(s)
-- **Sourdough** (Grains & Flour) — used in 1 recipe(s)
-- **Soy chunks (textured)** (Sauces & Condiments) — used in 1 recipe(s)
-- **Unagi** (Other) — used in 1 recipe(s)
-- **Water (Biga)** (Beverages) — used in 1 recipe(s)
-- **Water chestnut flour** (Grains & Flour) — used in 1 recipe(s)
+## Menu recipes with gaps
+- **Custom Stir Fry** — 13 missing
+- **New Dimsum Platter** — 10 missing
+- **Gimbap 1** — 5 missing
+- **Shoyu Ramen** — 5 missing
+- **Cheese Chilli Dumplings** — 4 missing
+- **Chilli Oil Dumplings** — 4 missing
+- **Kwispy Scallion Pancake** — 4 missing
+- **Lasagna** — 4 missing
+- **Pasta Fritti 2.0** — 4 missing
+- **Pistachio Mousse Cake** — 4 missing
+- **Tofu Bao** — 4 missing
+- **Bombay Blues Roll** — 3 missing
+- **Chestnut Gyoza** — 3 missing
+- **Drunken Noodles** — 3 missing
+- **General Tso's Water Chestnuts** — 3 missing
+- **Hakka Noodles** — 3 missing
+- **Okonomiyaki Gyoza (6 Pcs)** — 3 missing
+- **Thai Curry** — 3 missing
+- **Thai Spring Roll** — 3 missing
+- **Volcano 1** — 3 missing
+- **Arancini** — 2 missing
+- **Caramelised Onion Pasta** — 2 missing
+- **Creamy Corn Rocks** — 2 missing
+- **Dragon Roll** — 2 missing
+- **Jalapeño Popper Roll** — 2 missing
+- **Korean Mandu** — 2 missing
+- **Kwispy Wonton** — 2 missing
+- **Pad Thai** — 2 missing
+- **Peanut Butter Ramen** — 2 missing
+- **Risotto** — 2 missing
+- **Roasted Red Bell Pepper Soup** — 2 missing
+- **Saucy Brussels Sprouts** — 2 missing
+- **Spiced Miso Ramen** — 2 missing
+- **Sticky Toffee Pudding** — 2 missing
+- **Stuffed Conchiglioni** — 2 missing
+- **Tiramisu 3.0** — 2 missing
+- **Tokyo Style Pizza (Dough Base)** — 2 missing
+- **Alfredo Fettuccine** — 1 missing
+- **Avocado Roll** — 1 missing
+- **Brownie With Ice Cream** — 1 missing
+- **Buttery Chilli Garlic Noodles** — 1 missing
+- **Caesar Salad** — 1 missing
+- **Cold Spicy Sesame Noodles** — 1 missing
+- **Corn Tempura Roll** — 1 missing
+- **Garlic Bread** — 1 missing
+- **Katsu Curry** — 1 missing
+- **Kwispy Lotus Root** — 1 missing
+- **Lemon Iced Tea** — 1 missing
+- **Lemon Linguini** — 1 missing
+- **Mint Mojito** — 1 missing
+- **Miso Tomato Soup** — 1 missing
+- **Moscow Mule** — 1 missing
+- **Pink Burrata Pasta** — 1 missing
+- **Spicy Tomato & Cream Macaroni** — 1 missing
+- **Steamed Edamame (Chilli / Salted)** — 1 missing
+- **Summer Burrata Salad** — 1 missing
+- **Tamarind Fizz** — 1 missing
+- **Tomato Butter Risotto** — 1 missing
+- **Tteokbokki** — 1 missing
 
-## 2. Composite items — should be built as a sub-recipe (no single purchase price)
-- **Scallion oil** — used in 3 recipe(s)
-- **Béchamel** — used in 2 recipe(s)
-- **Drunken sauce** — used in 2 recipe(s)
-- **Ginger paste** — used in 2 recipe(s)
-- **Ginger-garlic paste** — used in 2 recipe(s)
-- **Gyoza dip** — used in 2 recipe(s)
-- **Arancini batter** — used in 1 recipe(s)
-- **Bao sauce base** — used in 1 recipe(s)
-- **Batter** — used in 1 recipe(s)
-- **Boiled hakka noodles** — used in 1 recipe(s)
-- **Boiled noodles** — used in 1 recipe(s)
-- **Boiled soy keema** — used in 1 recipe(s)
-- **Bread base** — used in 1 recipe(s)
-- **Caesar mayo** — used in 1 recipe(s)
-- **Caramel sauce** — used in 1 recipe(s)
-- **Cheese & Chilli Dumplings** — used in 1 recipe(s)
-- **Chestnut Gyoza** — used in 1 recipe(s)
-- **Chili Crisp** — used in 1 recipe(s)
-- **Chilli besan paste** — used in 1 recipe(s)
-- **Chilli crisps** — used in 1 recipe(s)
-- **Chilli Garlic Sauce - Wok hei sauce** — used in 1 recipe(s)
-- **Chilli Oil Dumplings filling** — used in 1 recipe(s)
-- **Chilli Oil Dumplings paste** — used in 1 recipe(s)
-- **Chilly crisps and oil** — used in 1 recipe(s)
-- **Coffee sponge** — used in 1 recipe(s)
-- **Cold Spicy Sesame sauce** — used in 1 recipe(s)
-- **Coleslaw** — used in 1 recipe(s)
-- **Cooked risotto rice mix** — used in 1 recipe(s)
-- **Corn Rocks sauce** — used in 1 recipe(s)
-- **Dashi** — used in 1 recipe(s)
-- **Dragon sauce** — used in 1 recipe(s)
-- **Forest Dip** — used in 1 recipe(s)
-- **Forest Dumplings** — used in 1 recipe(s)
-- **Fried spring roll** — used in 1 recipe(s)
-- **Fried Tofu toss on soy** — used in 1 recipe(s)
-- **Garlic pomodoro sauce** — used in 1 recipe(s)
-- **Green garlic cream cheese** — used in 1 recipe(s)
-- **Green paste** — used in 1 recipe(s)
-- **Hakka sauce** — used in 1 recipe(s)
-- **Iced tea (Tata Gold)** — used in 1 recipe(s)
-- **Korean Mandu filling** — used in 1 recipe(s)
-- **Kunafa base** — used in 1 recipe(s)
-- **Kwispy Wonton filling** — used in 1 recipe(s)
-- **Lotus root sauce** — used in 1 recipe(s)
-- **Mix seasoning** — used in 1 recipe(s)
-- **Oil + Water (for steaming)** — used in 1 recipe(s)
-- **Orange (creamy tomato) sauce** — used in 1 recipe(s)
-- **Pad Thai sauce** — used in 1 recipe(s)
-- **Pesto dollop** — used in 1 recipe(s)
-- **Pistachio mousse** — used in 1 recipe(s)
-- **Pistachio sponge** — used in 1 recipe(s)
-- **Pumpkin seeds & pistachios (crushed & mixed)** — used in 1 recipe(s)
-- **Red Momos Sauce** — used in 1 recipe(s)
-- **Ricotta filling 15 g each** — used in 1 recipe(s)
-- **Roasted bell pepper paste** — used in 1 recipe(s)
-- **Salsa** — used in 1 recipe(s)
-- **Saucy Momos** — used in 1 recipe(s)
-- **Sautéed spinach with soy & garlic** — used in 1 recipe(s)
-- **Scallion Pancake** — used in 1 recipe(s)
-- **Scallion salad** — used in 1 recipe(s)
-- **Seasoning** — used in 1 recipe(s)
-- **Sesame mix** — used in 1 recipe(s)
-- **Shoyu tare** — used in 1 recipe(s)
-- **Sichuan Sauce** — used in 1 recipe(s)
-- **Sichuan soy glaze** — used in 1 recipe(s)
-- **Slurry** — used in 1 recipe(s)
-- **Sticky toffee pudding** — used in 1 recipe(s)
-- **Stock pwd** — used in 1 recipe(s)
-- **Sweet corn puree** — used in 1 recipe(s)
-- **Tamarind syrup** — used in 1 recipe(s)
-- **Tempura flex** — used in 1 recipe(s)
-- **Teriyaki Sauce - Sesame seed** — used in 1 recipe(s)
-- **Teriyaki Sauce - Water** — used in 1 recipe(s)
-- **Thai Spring Filling** — used in 1 recipe(s)
-- **Tofu batter** — used in 1 recipe(s)
-- **Truffle Edamame Dumplings** — used in 1 recipe(s)
-- **Tteokbokki sauce** — used in 1 recipe(s)
-- **Tuile décor** — used in 1 recipe(s)
-- **Veg stock** — used in 1 recipe(s)
-- **Wasabi paste** — used in 1 recipe(s)
-- **White chocolate décor** — used in 1 recipe(s)
-- **Wok Hei Sauce - Black pepper** — used in 1 recipe(s)
-- **Wok Hei Sauce - Water** — used in 1 recipe(s)
-- **Yaki Soba Sauce - Black pepper** — used in 1 recipe(s)
-- **Yaki Soba Sauce - Corn starch** — used in 1 recipe(s)
-- **Yaki Soba Sauce - Crushed black pepper** — used in 1 recipe(s)
-- **Yaki Soba Sauce - Hot sauce** — used in 1 recipe(s)
-- **Yaki Soba Sauce - Oyster sauce** — used in 1 recipe(s)
-- **Yaki Soba Sauce - Soy sauce** — used in 1 recipe(s)
-- **Yaki Soba Sauce - Sugar** — used in 1 recipe(s)
-- **Yaki Soba Sauce - Water** — used in 1 recipe(s)
+## Sub-recipes (preps) with gaps
+- (none)
 
-## 3. Yields created without a price
+## Raw ingredients that need a price (fill the ₹/kg column)
+- **Nori** (Other) — 4 recipe(s)
+- **Chestnut** (Bakery) — 2 recipe(s)
+- **Ramen noodles** (Grains & Flour) — 2 recipe(s)
+- **1 ladle water** (Beverages) — 1 recipe(s)
+- **Bao** (Other) — 1 recipe(s)
+- **Bay leaf (remove before blending)** (Other) — 1 recipe(s)
+- **Black Vinegar** (Sauces & Condiments) — 1 recipe(s)
+- **Boiled linguini** (Oils & Fats) — 1 recipe(s)
+- **Broad Beans** (Other) — 1 recipe(s)
+- **Celery (diced)** (Beverages) — 1 recipe(s)
+- **Chilli Crisp (for chilli version)** (Spices) — 1 recipe(s)
+- **Cold water** (Beverages) — 1 recipe(s)
+- **Conchiglioni** (Grains & Flour) — 1 recipe(s)
+- **Cookies & cream ice cream** (Dairy) — 1 recipe(s)
+- **Cumin powder** (Spices) — 1 recipe(s)
+- **Flat noodles** (Grains & Flour) — 1 recipe(s)
+- **Fried glass noodles** (Grains & Flour) — 1 recipe(s)
+- **Granola (chopped)** (Bakery) — 1 recipe(s)
+- **Gunsberg Ginger Beer** (Vegetables) — 1 recipe(s)
+- **Hing** (Other) — 1 recipe(s)
+- **Julienne cut nori sheet** (Grains & Flour) — 1 recipe(s)
+- **Kinley Soda** (Beverages) — 1 recipe(s)
+- **Lasagna sheets (oven-ready)** (Grains & Flour) — 1 recipe(s)
+- **Maida noodles** (Grains & Flour) — 1 recipe(s)
+- **Mixed mushroom** (Vegetables) — 1 recipe(s)
+- **Nori half sheet** (Grains & Flour) — 1 recipe(s)
+- **Nori sheet** (Grains & Flour) — 1 recipe(s)
+- **Nori sheets** (Grains & Flour) — 1 recipe(s)
+- **Nutmeg** (Bakery) — 1 recipe(s)
+- **Pasta sheet 22 g x 2** (Grains & Flour) — 1 recipe(s)
+- **Peas** (Other) — 1 recipe(s)
+- **Pickled radish** (Other) — 1 recipe(s)
+- **Pickled red Bhavnagri** (Other) — 1 recipe(s)
+- **Plain mayonnaise** (Sauces & Condiments) — 1 recipe(s)
+- **Salt & black pepper** (Spices) — 1 recipe(s)
+- **Sichuan powder** (Spices) — 1 recipe(s)
+- **Sourdough** (Grains & Flour) — 1 recipe(s)
+- **Soy chunks (textured)** (Sauces & Condiments) — 1 recipe(s)
+- **Unagi** (Other) — 1 recipe(s)
+- **Water (Biga)** (Beverages) — 1 recipe(s)
+- **Water chestnut flour** (Grains & Flour) — 1 recipe(s)
+
+## Composites — build as a sub-recipe
+- **Scallion oil** — no — create it (3 recipe(s))
+- **Béchamel** — no — create it (2 recipe(s))
+- **Drunken sauce** — no — create it (2 recipe(s))
+- **Ginger paste** — no — create it (2 recipe(s))
+- **Ginger-garlic paste** — no — create it (2 recipe(s))
+- **Gyoza dip** — no — create it (2 recipe(s))
+- **Arancini batter** — no — create it (1 recipe(s))
+- **Bao sauce base** — no — create it (1 recipe(s))
+- **Batter** — no — create it (1 recipe(s))
+- **Boiled hakka noodles** — no — create it (1 recipe(s))
+- **Boiled noodles** — no — create it (1 recipe(s))
+- **Boiled soy keema** — no — create it (1 recipe(s))
+- **Bread base** — no — create it (1 recipe(s))
+- **Caesar mayo** — no — create it (1 recipe(s))
+- **Caramel sauce** — no — create it (1 recipe(s))
+- **Cheese & Chilli Dumplings** — no — create it (1 recipe(s))
+- **Chestnut Gyoza** — YES — just link it (1 recipe(s))
+- **Chili Crisp** — no — create it (1 recipe(s))
+- **Chilli besan paste** — no — create it (1 recipe(s))
+- **Chilli crisps** — no — create it (1 recipe(s))
+- **Chilli Garlic Sauce - Wok hei sauce** — no — create it (1 recipe(s))
+- **Chilli Oil Dumplings filling** — no — create it (1 recipe(s))
+- **Chilli Oil Dumplings paste** — no — create it (1 recipe(s))
+- **Chilly crisps and oil** — no — create it (1 recipe(s))
+- **Coffee sponge** — no — create it (1 recipe(s))
+- **Cold Spicy Sesame sauce** — no — create it (1 recipe(s))
+- **Coleslaw** — no — create it (1 recipe(s))
+- **Cooked risotto rice mix** — no — create it (1 recipe(s))
+- **Corn Rocks sauce** — no — create it (1 recipe(s))
+- **Dashi** — no — create it (1 recipe(s))
+- **Dragon sauce** — no — create it (1 recipe(s))
+- **Forest Dip** — no — create it (1 recipe(s))
+- **Forest Dumplings** — no — create it (1 recipe(s))
+- **Fried spring roll** — no — create it (1 recipe(s))
+- **Fried Tofu toss on soy** — no — create it (1 recipe(s))
+- **Garlic pomodoro sauce** — no — create it (1 recipe(s))
+- **Green garlic cream cheese** — no — create it (1 recipe(s))
+- **Green paste** — no — create it (1 recipe(s))
+- **Hakka sauce** — no — create it (1 recipe(s))
+- **Iced tea (Tata Gold)** — no — create it (1 recipe(s))
+- **Korean Mandu filling** — no — create it (1 recipe(s))
+- **Kunafa base** — no — create it (1 recipe(s))
+- **Kwispy Wonton filling** — no — create it (1 recipe(s))
+- **Lotus root sauce** — no — create it (1 recipe(s))
+- **Mix seasoning** — no — create it (1 recipe(s))
+- **Oil + Water (for steaming)** — no — create it (1 recipe(s))
+- **Orange (creamy tomato) sauce** — no — create it (1 recipe(s))
+- **Pad Thai sauce** — no — create it (1 recipe(s))
+- **Pesto dollop** — no — create it (1 recipe(s))
+- **Pistachio mousse** — no — create it (1 recipe(s))
+- **Pistachio sponge** — no — create it (1 recipe(s))
+- **Pumpkin seeds & pistachios (crushed & mixed)** — no — create it (1 recipe(s))
+- **Red Momos Sauce** — no — create it (1 recipe(s))
+- **Ricotta filling 15 g each** — no — create it (1 recipe(s))
+- **Roasted bell pepper paste** — no — create it (1 recipe(s))
+- **Salsa** — no — create it (1 recipe(s))
+- **Saucy Momos** — YES — just link it (1 recipe(s))
+- **Sautéed spinach with soy & garlic** — no — create it (1 recipe(s))
+- **Scallion Pancake** — no — create it (1 recipe(s))
+- **Scallion salad** — no — create it (1 recipe(s))
+- **Seasoning** — no — create it (1 recipe(s))
+- **Sesame mix** — no — create it (1 recipe(s))
+- **Shoyu tare** — no — create it (1 recipe(s))
+- **Sichuan Sauce** — no — create it (1 recipe(s))
+- **Sichuan soy glaze** — no — create it (1 recipe(s))
+- **Slurry** — no — create it (1 recipe(s))
+- **Sticky toffee pudding** — YES — just link it (1 recipe(s))
+- **Stock pwd** — no — create it (1 recipe(s))
+- **Sweet corn puree** — no — create it (1 recipe(s))
+- **Tamarind syrup** — no — create it (1 recipe(s))
+- **Tempura flex** — no — create it (1 recipe(s))
+- **Teriyaki Sauce - Sesame seed** — no — create it (1 recipe(s))
+- **Teriyaki Sauce - Water** — no — create it (1 recipe(s))
+- **Thai Spring Filling** — no — create it (1 recipe(s))
+- **Tofu batter** — no — create it (1 recipe(s))
+- **Truffle Edamame Dumplings** — no — create it (1 recipe(s))
+- **Tteokbokki sauce** — no — create it (1 recipe(s))
+- **Tuile décor** — no — create it (1 recipe(s))
+- **Veg stock** — no — create it (1 recipe(s))
+- **Wasabi paste** — no — create it (1 recipe(s))
+- **White chocolate décor** — no — create it (1 recipe(s))
+- **Wok Hei Sauce - Black pepper** — no — create it (1 recipe(s))
+- **Wok Hei Sauce - Water** — no — create it (1 recipe(s))
+- **Yaki Soba Sauce - Black pepper** — no — create it (1 recipe(s))
+- **Yaki Soba Sauce - Corn starch** — no — create it (1 recipe(s))
+- **Yaki Soba Sauce - Crushed black pepper** — no — create it (1 recipe(s))
+- **Yaki Soba Sauce - Hot sauce** — no — create it (1 recipe(s))
+- **Yaki Soba Sauce - Oyster sauce** — no — create it (1 recipe(s))
+- **Yaki Soba Sauce - Soy sauce** — no — create it (1 recipe(s))
+- **Yaki Soba Sauce - Sugar** — no — create it (1 recipe(s))
+- **Yaki Soba Sauce - Water** — no — create it (1 recipe(s))
+
+## Yields created without a price
 - **Processed Bok Choy** (yield 67%)
 - **Cut French Beans** (yield 87.11%)
 - **Bell Pepper Rings** (yield 48.48%)
