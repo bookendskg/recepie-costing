@@ -92,6 +92,27 @@ export function RecipeDetailPage() {
       .filter((x) => (x.id === masterId || x.parent_recipe_id === masterId) && x.size_label)
       .sort((a, b) => (a.size_label ?? "").localeCompare(b.size_label ?? ""));
   }, [allRecipes, data]);
+
+  // Name-variant family (e.g. Baby / Mid / Prime Hulk Pizza): masters that share a
+  // base name differing only by a size-tier qualifier, surfaced as a variant
+  // switcher next to the size switcher. Derived from names — no data migration.
+  const variantFamily = useMemo(() => {
+    const r = data?.recipe;
+    if (!r) return [];
+    const QUAL = /\b(Prime|Mid|Baby|Mini|Small|Large|Regular|Classic|Special|Jumbo)\b/i;
+    const masters = allRecipes.filter((x) => !x.parent_recipe_id);
+    const master = masters.find((x) => x.id === (r.parent_recipe_id ?? r.id)) ?? r;
+    const mm = master.recipe_name.match(QUAL);
+    if (!mm) return [];
+    const baseOf = (name: string) => name.replace(QUAL, "").replace(/\s+/g, " ").trim().toLowerCase();
+    const base = baseOf(master.recipe_name);
+    const fam = masters
+      .map((x) => ({ x, q: x.recipe_name.match(QUAL) }))
+      .filter((e) => e.q && e.x.brand === master.brand && baseOf(e.x.recipe_name) === base)
+      .map((e) => ({ id: e.x.id, label: e.q![1], activeId: r.id === e.x.id || r.parent_recipe_id === e.x.id }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+    return fam.length > 1 ? fam : [];
+  }, [allRecipes, data]);
   const costHistory = useRecipeCostHistory(id);
   const versions = useRecipeVersions(id);
 
@@ -198,6 +219,23 @@ export function RecipeDetailPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{recipe.recipe_name}</h1>
           <p className="text-muted-foreground">{recipe.description ?? `${brandLabel} • ${recipe.category}`}</p>
+          {/* Name-variant switcher (e.g. Baby / Mid / Prime Hulk) — like the size switcher. */}
+          {variantFamily.length > 1 && (
+            <div className="mt-2 mr-2 inline-flex gap-1 rounded-lg border bg-muted p-1 align-top">
+              {variantFamily.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => navigate(`/recipes/${v.id}`)}
+                  className={cn(
+                    "rounded-md px-3 py-1 text-sm font-medium transition-colors",
+                    v.activeId ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
+          )}
           {/* §16 Pizza size variants — switch between sizes; each is costed separately. */}
           {sizeFamily.length > 1 && (
             <div className="mt-2 inline-flex gap-1 rounded-lg border bg-muted p-1">
