@@ -12,13 +12,17 @@ import { resolveParentAndCut, cutYieldPct } from "./ingredientCuts";
 import { MASTER_PRICES } from "./masterPrices";
 import { MASTER_DISH_COSTS } from "./masterDishCosts";
 import { MASTER_YIELDS } from "./masterYields";
+import { VEG_FRUIT_PRICES, VEG_FRUIT_ITEMS } from "./vegFruitPrices";
 import type { MockDb } from "./mock/db";
 import type { Brand, IngredientYield, RawMaterial, Recipe, RecipeIngredient, User } from "./types";
 
 /** ₹ per gram for an ingredient from the master costing book (the only price
  *  source), matched by normalised name. Undefined when the book has no price. */
 const priceNorm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
-const masterPerGram = (name: string): number | undefined => MASTER_PRICES[priceNorm(name)];
+// The Surat produce price master overrides the older costing book for the produce
+// items it lists; everything else still resolves from the book.
+const masterPerGram = (name: string): number | undefined =>
+  VEG_FRUIT_PRICES[priceNorm(name)] ?? MASTER_PRICES[priceNorm(name)];
 
 /** Per-dish making/packaging/selling from the master "…2026" summary sheets,
  *  matched to a recipe name (exact key, then a contains-based fuzzy fallback). */
@@ -800,6 +804,39 @@ const masterYieldRows: IngredientYield[] = [];
       created_at: SEED_TS,
       updated_at: SEED_TS,
       created_by: U_ADMIN,
+    });
+  }
+}
+
+// Surat produce price master: add any produce not already in the catalogue, so the
+// full priced list is available in Raw Materials. Existing materials already picked
+// up the updated price via masterPerGram (which prefers VEG_FRUIT_PRICES).
+{
+  const pnorm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+  const existing = new Set(raw_materials.map((m) => pnorm(m.ingredient_name)));
+  const slug = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const ids = new Set(raw_materials.map((m) => m.id));
+  for (const it of VEG_FRUIT_ITEMS) {
+    if (existing.has(pnorm(it.name))) continue;
+    existing.add(pnorm(it.name));
+    let mid = "m-vf-" + slug(it.name);
+    while (ids.has(mid)) mid += "-x";
+    ids.add(mid);
+    raw_materials.push({
+      id: mid,
+      ingredient_name: it.name,
+      category: it.category || inferCategory(it.name),
+      supplier_name: null,
+      notes: "Surat produce price master",
+      purchase_price: round2(it.perGram * 1000),
+      purchase_quantity: 1,
+      purchase_unit: "KG",
+      base_unit: "Gram",
+      cost_per_base_unit: it.perGram,
+      last_price_update: SEED_TS.slice(0, 10),
+      status: "active",
+      created_by: U_ADMIN,
+      created_at: SEED_TS,
     });
   }
 }
