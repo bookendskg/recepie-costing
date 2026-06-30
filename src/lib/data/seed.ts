@@ -407,6 +407,10 @@ for (const d of allDefs) {
   const usedMatIds = new Set(raw_materials.map((m) => m.id));
   const slugify = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   const purchaseUnitFor = (base: string) => (base === "Gram" ? "KG" : base === "ML" ? "Litre" : "Piece");
+  // In-house prep recipes, matchable by name — a menu ingredient whose name is a
+  // prep is LINKED as a sub-recipe (clickable, costed from its yield) rather than
+  // duplicated as a flat material (§16–§21).
+  const prepByName = new Map(recipes.filter((r) => r.is_prep).map((r) => [norm(r.recipe_name), r] as const));
 
   for (const cb of COOKBOOK_RECIPES) {
     if (existingRecipeNames.has(norm(cb.name))) continue; // never duplicate a seeded dish
@@ -417,6 +421,26 @@ for (const d of allDefs) {
     let rawCost = 0;
     let anyPriced = false;
     cb.ingredients.forEach((ing, idx) => {
+      // Sub-recipe link: same brand, not itself, compatible unit → component "recipe".
+      const prep = prepByName.get(norm(ing.name));
+      if (prep && prep.brand === cb.brand && prep.id !== cb.id && ing.unit === prep.yield_unit) {
+        const perUnit = prepUnitCostFrom(prep.total_cost ?? 0, prep.yield_quantity, prep.wastage_pct ?? WASTAGE_PCT);
+        const lineCost = round2(perUnit * ing.qty);
+        rawCost += lineCost;
+        anyPriced = true;
+        recipe_ingredients.push({
+          id: `${cb.id}-i${idx}`,
+          recipe_id: cb.id,
+          ingredient_id: prep.id,
+          component_type: "recipe",
+          quantity_used: ing.qty,
+          unit_used: ing.unit,
+          calculated_cost: lineCost,
+          sort_order: idx,
+        });
+        if (ing.unit === "Gram") totalGrams += ing.qty;
+        return;
+      }
       let matId = matByName.get(norm(ing.name));
       if (!matId) {
         let id = "m-cb-" + slugify(ing.name);
@@ -567,6 +591,8 @@ for (const d of allDefs) {
   const usedMatIds = new Set(raw_materials.map((m) => m.id));
   const slugify = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   const purchaseUnitFor = (base: string) => (base === "Gram" ? "KG" : base === "ML" ? "Litre" : "Piece");
+  // Prep recipes a pizza ingredient may link to as a clickable sub-recipe (e.g. Pizza Dough).
+  const prepByName = new Map(recipes.filter((r) => r.is_prep).map((r) => [pnorm(r.recipe_name), r] as const));
 
   const buildVariant = (
     id: string,
@@ -580,6 +606,26 @@ for (const d of allDefs) {
     let rawCost = 0;
     let anyPriced = false;
     ings.forEach((ing, idx) => {
+      // Sub-recipe link (same brand, compatible unit) → clickable, yield-costed.
+      const prep = prepByName.get(pnorm(ing.name));
+      if (prep && prep.brand === "capiche" && prep.id !== id && ing.unit === prep.yield_unit) {
+        const perUnit = prepUnitCostFrom(prep.total_cost ?? 0, prep.yield_quantity, prep.wastage_pct ?? WASTAGE_PCT);
+        const lineCost = round2(perUnit * ing.qty);
+        rawCost += lineCost;
+        anyPriced = true;
+        recipe_ingredients.push({
+          id: `${id}-i${idx}`,
+          recipe_id: id,
+          ingredient_id: prep.id,
+          component_type: "recipe",
+          quantity_used: ing.qty,
+          unit_used: ing.unit,
+          calculated_cost: lineCost,
+          sort_order: idx,
+        });
+        if (ing.unit === "Gram") totalGrams += ing.qty;
+        return;
+      }
       let matId = matByName.get(pnorm(ing.name));
       if (!matId) {
         let mid = "m-cb-" + slugify(ing.name);

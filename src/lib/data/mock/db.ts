@@ -34,7 +34,7 @@ export interface MockDb {
 }
 
 // Bump this when the seed/DB shape changes so stale localStorage data is reseeded.
-const STORAGE_KEY = "rcms.mockdb.v32";
+const STORAGE_KEY = "rcms.mockdb.v33";
 
 let cache: MockDb | null = null;
 
