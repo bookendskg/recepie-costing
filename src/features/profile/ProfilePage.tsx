@@ -30,7 +30,14 @@ export function ProfilePage() {
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone ?? "");
   const [avatar, setAvatar] = useState<string | null>(user.avatar_url ?? null);
+  const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  /** True only when a real Supabase auth session exists — a seeded/mock user
+   *  (even with Supabase configured) must save via the mock repo, otherwise the
+   *  self-edit RPC runs with auth.uid()=null and fails silently. */
+  const hasSupabaseSession = async () =>
+    isSupabaseConfigured && supabase ? !!(await supabase.auth.getSession()).data.session : false;
   const dirty = name !== user.name || phone !== (user.phone ?? "") || avatar !== (user.avatar_url ?? null);
 
   const onPickAvatar = (file: File | undefined) => {
@@ -49,15 +56,18 @@ export function ProfilePage() {
       toast.error("Name is required");
       return;
     }
+    setSaving(true);
     try {
       const patch = { name: name.trim(), phone: phone.trim() || null, avatar_url: avatar };
-      const updated = isSupabaseConfigured
+      const updated = (await hasSupabaseSession())
         ? await updateOwnProfile(user.id, patch)
         : await updateMut.mutateAsync({ id: user.id, patch });
       setUser(updated);
       toast.success("Profile updated");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Update failed");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -77,8 +87,8 @@ export function ProfilePage() {
       return;
     }
     try {
-      if (isSupabaseConfigured && supabase) {
-        const { error } = await supabase.auth.updateUser({ password: pw });
+      if (await hasSupabaseSession()) {
+        const { error } = await supabase!.auth.updateUser({ password: pw });
         if (error) throw new Error(error.message);
       } else {
         await updateMut.mutateAsync({ id: user.id, patch: { password: pw } });
@@ -151,8 +161,8 @@ export function ProfilePage() {
               </div>
 
               <div className="mt-5 flex justify-end">
-                <Button variant="accent" onClick={saveProfile} disabled={!dirty || updateMut.isPending}>
-                  {updateMut.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                <Button variant="accent" onClick={saveProfile} disabled={!dirty || saving}>
+                  {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                   Save Changes
                 </Button>
               </div>
