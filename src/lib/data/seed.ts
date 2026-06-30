@@ -413,10 +413,13 @@ for (const d of allDefs) {
   const prepByName = new Map(recipes.filter((r) => r.is_prep).map((r) => [norm(r.recipe_name), r] as const));
 
   for (const cb of COOKBOOK_RECIPES) {
-    if (existingRecipeNames.has(norm(cb.name))) continue; // never duplicate a seeded dish
+    if (existingRecipeNames.has(norm(cb.name))) continue; // never duplicate a seeded/earlier dish
     // Capiche pizzas come from the 11"/15" master sheets (built below) — skip the
     // single-size cookbook versions so each pizza appears once with both sizes.
     if (cb.category === "Pizza" && cb.brand === "capiche") continue;
+    // Reserve the name so a second cookbook entry with the same name (e.g. a
+    // duplicate "Burrata Salad") is skipped — no two recipes share a name (§31).
+    existingRecipeNames.add(norm(cb.name));
     let totalGrams = 0;
     let rawCost = 0;
     let anyPriced = false;
