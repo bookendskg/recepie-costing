@@ -716,7 +716,10 @@ for (const d of allDefs) {
     const masterIngs = fifteen ?? eleven;
     if (!masterIngs) continue;
     buildVariant(masterId, pz.name, null, fifteen ? "15_INCH" : "11_INCH", masterIngs, dc);
-    if (fifteen && eleven) buildVariant(`${masterId}-11`, pz.name, masterId, "11_INCH", eleven, null);
+    // 11" inherits the pizza's packaging (it's boxed too) but keeps its OWN making
+    // cost + no pinned selling price (interim until a per-size packaging file lands).
+    const dc11 = dc ? { ...dc, making: null, selling: null } : null;
+    if (fifteen && eleven) buildVariant(`${masterId}-11`, pz.name, masterId, "11_INCH", eleven, dc11);
   }
 }
 
