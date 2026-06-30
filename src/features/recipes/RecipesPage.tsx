@@ -100,6 +100,12 @@ export function RecipesPage({ prepMode = false }: { prepMode?: boolean } = {}) {
         collapsed[repAt.get(k)!] = r; // promote the flagship as the family's single entry
       }
     }
+    // Show the FAMILY name on the collapsed entry (e.g. "Prime Hulk Pizza" → "Hulk
+    // Pizza"); the Prime/Mid/Baby tiers are the variant switcher on the detail page.
+    for (const idx of repAt.values()) {
+      const r = collapsed[idx];
+      collapsed[idx] = { ...r, recipe_name: r.recipe_name.replace(QUAL, "").replace(/\s+/g, " ").trim() };
+    }
     return collapsed;
   }, [allRecipes, prepMode, user, globalBrand]);
 

@@ -160,6 +160,16 @@ export function RecipeDetailPage() {
 
   const { recipe, ingredients } = data;
 
+  // When this recipe is one of a name-variant family (Baby/Mid/Prime Hulk), the
+  // title shows the FAMILY name (e.g. "Hulk Pizza"); the tier is the variant switcher.
+  const displayName =
+    variantFamily.length > 1
+      ? recipe.recipe_name
+          .replace(/\b(Prime|Mid|Baby|Mini|Small|Large|Regular|Classic|Special|Jumbo)\b/i, "")
+          .replace(/\s+/g, " ")
+          .trim()
+      : recipe.recipe_name;
+
   // Viewer access enforcement — by granted brand (PRD §14).
   if (user.role === "viewer" && !viewerCanAccess(user, recipe)) {
     return (
@@ -202,10 +212,10 @@ export function RecipeDetailPage() {
         </button>
       ) : (
         <button
-          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/recipes"))}
+          onClick={() => navigate(recipe.is_prep ? "/prep" : "/recipes")}
           className="mb-2 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Back
+          <ArrowLeft className="h-4 w-4" /> Back to {recipe.is_prep ? "In-House Prep" : "Recipes"}
         </button>
       )}
 
@@ -217,7 +227,7 @@ export function RecipeDetailPage() {
       {/* Header */}
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{recipe.recipe_name}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{displayName}</h1>
           <p className="text-muted-foreground">{recipe.description ?? `${brandLabel} • ${recipe.category}`}</p>
           {/* Name-variant switcher (e.g. Baby / Mid / Prime Hulk) — like the size switcher. */}
           {variantFamily.length > 1 && (
