@@ -13,16 +13,27 @@ import { MASTER_PRICES } from "./masterPrices";
 import { MASTER_DISH_COSTS } from "./masterDishCosts";
 import { MASTER_YIELDS } from "./masterYields";
 import { VEG_FRUIT_PRICES, VEG_FRUIT_ITEMS } from "./vegFruitPrices";
+import { PANKIL_PRICES, PANKIL_ITEMS } from "./pankilPrices";
+import { PRODUCE_ALIASES } from "./produceAliases";
 import type { MockDb } from "./mock/db";
 import type { Brand, IngredientYield, RawMaterial, Recipe, RecipeIngredient, User } from "./types";
 
 /** ₹ per gram for an ingredient from the master costing book (the only price
  *  source), matched by normalised name. Undefined when the book has no price. */
 const priceNorm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
-// The Surat produce price master overrides the older costing book for the produce
-// items it lists; everything else still resolves from the book.
-const masterPerGram = (name: string): number | undefined =>
-  VEG_FRUIT_PRICES[priceNorm(name)] ?? MASTER_PRICES[priceNorm(name)];
+// Price precedence (both new files are authoritative, then the older book):
+//   produce alias → produce master → Pankil master → costing book.
+// PRODUCE_ALIASES maps recipe spelling/prep variants ("Alfanso mango") to the
+// canonical produce name ("Alphonso Mango") so they price correctly.
+const masterPerGram = (name: string): number | undefined => {
+  const n = priceNorm(name);
+  const canon = PRODUCE_ALIASES[n];
+  if (canon) {
+    const aliased = VEG_FRUIT_PRICES[priceNorm(canon)];
+    if (aliased != null) return aliased;
+  }
+  return VEG_FRUIT_PRICES[n] ?? PANKIL_PRICES[n] ?? MASTER_PRICES[n];
+};
 
 /** Per-dish making/packaging/selling from the master "…2026" summary sheets,
  *  matched to a recipe name (exact key, then a contains-based fuzzy fallback). */
@@ -828,6 +839,39 @@ const masterYieldRows: IngredientYield[] = [];
       category: it.category || inferCategory(it.name),
       supplier_name: null,
       notes: "Surat produce price master",
+      purchase_price: round2(it.perGram * 1000),
+      purchase_quantity: 1,
+      purchase_unit: "KG",
+      base_unit: "Gram",
+      cost_per_base_unit: it.perGram,
+      last_price_update: SEED_TS.slice(0, 10),
+      status: "active",
+      created_by: U_ADMIN,
+      created_at: SEED_TS,
+    });
+  }
+}
+
+// Pankil master price list: add any FOOD item not already in the catalogue. Existing
+// materials already picked up the updated Pankil price via masterPerGram (produce →
+// Pankil → book precedence).
+{
+  const pnorm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+  const existing = new Set(raw_materials.map((m) => pnorm(m.ingredient_name)));
+  const slug = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const ids = new Set(raw_materials.map((m) => m.id));
+  for (const it of PANKIL_ITEMS) {
+    if (existing.has(pnorm(it.name))) continue;
+    existing.add(pnorm(it.name));
+    let mid = "m-pk-" + slug(it.name);
+    while (ids.has(mid)) mid += "-x";
+    ids.add(mid);
+    raw_materials.push({
+      id: mid,
+      ingredient_name: it.name,
+      category: it.category || inferCategory(it.name),
+      supplier_name: null,
+      notes: "Pankil master price list",
       purchase_price: round2(it.perGram * 1000),
       purchase_quantity: 1,
       purchase_unit: "KG",
