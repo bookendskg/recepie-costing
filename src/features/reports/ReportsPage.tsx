@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -37,7 +37,7 @@ import {
 import { generateExcelReport } from "./excel";
 
 export function ReportsPage() {
-  const { data: recipes = [] } = useRecipes();
+  const { data: recipes = [], isLoading: recipesLoading, isError: recipesError } = useRecipes();
   const { data: materials = [] } = useMaterials();
   const { data: users = [] } = useUsers();
   const { data: categories = [] } = useRecipeCategories();
@@ -53,6 +53,7 @@ export function ReportsPage() {
   const [category, setCategory] = useState("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
 
   const filtered = useMemo(
     () =>
@@ -81,14 +82,20 @@ export function ReportsPage() {
   const brandLabel = brand === "all" ? "AllBrands" : brand === "capiche" ? "Capiche" : "Aiko";
 
   const exportExcel = async () => {
+    setIsExporting(true);
     try {
       const ids = new Set(filtered.map((r) => r.id));
+      const usedIngIds = new Set(
+        (ingredients.data ?? []).filter((i) => ids.has(i.recipe_id)).map((i) => i.ingredient_id),
+      );
       await generateExcelReport(
         {
           recipes: filtered,
           ingredients: (ingredients.data ?? []).filter((i) => ids.has(i.recipe_id)),
           costHistory: (costHistory.data ?? []).filter((h) => ids.has(h.recipe_id ?? "")),
-          priceHistory: priceHistory.data ?? [],
+          // Scope price history to ingredients used by the filtered (brand-scoped)
+          // recipes so the export never mixes the other brand's price changes (§26).
+          priceHistory: (priceHistory.data ?? []).filter((p) => usedIngIds.has(p.ingredient_id ?? "")),
           usersById: new Map(users.map((u) => [u.id, u])),
           materialsById: new Map(materials.map((m) => [m.id, m])),
           foodCostPct,
@@ -98,6 +105,8 @@ export function ReportsPage() {
       toast.success("Excel report downloaded");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Export failed");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -107,8 +116,9 @@ export function ReportsPage() {
         title="Reports"
         description="Filter recipes and export a multi-sheet Excel workbook"
         actions={
-          <Button variant="accent" onClick={exportExcel} disabled={filtered.length === 0}>
-            <FileSpreadsheet className="h-4 w-4" /> Export Excel
+          <Button variant="accent" onClick={exportExcel} disabled={filtered.length === 0 || isExporting}>
+            {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}
+            {isExporting ? "Preparing…" : "Export Excel"}
           </Button>
         }
       />
@@ -165,40 +175,58 @@ export function ReportsPage() {
         </div>
       </Card>
 
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Recipe</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Total Cost</TableHead>
-              <TableHead>Cost / Portion</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Export</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.map((r) => (
-              <TableRow key={r.id}>
-                <TableCell className="font-medium">{r.recipe_name}</TableCell>
-                <TableCell>{r.category}</TableCell>
-                <TableCell>{formatINR(r.total_cost)}</TableCell>
-                <TableCell>{formatINR(r.cost_per_portion)}</TableCell>
-                <TableCell>
-                  <StatusBadge status={r.status} />
-                </TableCell>
-                <TableCell className="text-right">
-                  <RecipePdfButton
-                    recipe={r}
-                    ingredients={ingredientsByRecipe.get(r.id) ?? []}
-                    foodCostPct={foodCostPct}
-                  />
-                </TableCell>
+      {recipesLoading ? (
+        <Card>
+          <div className="flex items-center justify-center gap-2 py-16 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" /> Loading reports…
+          </div>
+        </Card>
+      ) : recipesError ? (
+        <Card>
+          <div className="py-12 text-center text-sm text-destructive">
+            Unable to load reports. Please refresh and try again.
+          </div>
+        </Card>
+      ) : filtered.length === 0 ? (
+        <Card>
+          <div className="py-12 text-center text-sm text-muted-foreground">No recipes match these filters.</div>
+        </Card>
+      ) : (
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Recipe</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Total Cost</TableHead>
+                <TableHead>Cost / Portion</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Export</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell className="font-medium">{r.recipe_name}</TableCell>
+                  <TableCell>{r.category}</TableCell>
+                  <TableCell>{formatINR(r.total_cost)}</TableCell>
+                  <TableCell>{formatINR(r.cost_per_portion)}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={r.status} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <RecipePdfButton
+                      recipe={r}
+                      ingredients={ingredientsByRecipe.get(r.id) ?? []}
+                      foodCostPct={foodCostPct}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
     </>
   );
 }

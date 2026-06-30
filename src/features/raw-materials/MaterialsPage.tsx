@@ -221,13 +221,18 @@ export function MaterialsPage() {
     setFormOpen(true);
   };
 
+  const [isExporting, setIsExporting] = useState(false);
   const doExport = async () => {
+    if (isExporting) return;
     const list = selected.size > 0 ? sorted.filter((m) => selected.has(m.id)) : sorted;
+    setIsExporting(true);
     try {
       await exportMaterials(list, String(list.length));
       toast.success(`Exported ${list.length} ingredient${list.length === 1 ? "" : "s"}`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Export failed");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -305,7 +310,7 @@ export function MaterialsPage() {
         description={canEdit ? "Manage ingredients and their purchase pricing" : "Ingredient prices are managed by an admin."}
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={doExport}>
+            <Button variant="outline" onClick={doExport} disabled={isExporting}>
               <Download className="h-4 w-4" /> Export
             </Button>
             {canEdit && (
@@ -383,7 +388,7 @@ export function MaterialsPage() {
         <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border bg-muted/50 px-4 py-2.5 text-sm">
           <span className="font-medium">{selected.size} selected</span>
           <div className="flex-1" />
-          <Button variant="outline" size="sm" onClick={doExport}>
+          <Button variant="outline" size="sm" onClick={doExport} disabled={isExporting}>
             <Download className="h-4 w-4" /> Export
           </Button>
           <Button variant="outline" size="sm" onClick={() => setBulkConfirm("active")}>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ChevronDown,
@@ -134,6 +134,15 @@ export function RecipesPage({ prepMode = false }: { prepMode?: boolean } = {}) {
   const [status, setStatus] = useState("all");
   const [fcRange, setFcRange] = useState("all");
   const [page, setPage] = useState(1);
+
+  // §13: clear stale filters when the global brand changes, so a Capiche category
+  // (e.g. Pizza) never persists into Aiko after switching brands.
+  useEffect(() => {
+    setCategory("all");
+    setStatus("all");
+    setFcRange("all");
+    setPage(1);
+  }, [globalBrand]);
   const pageSize = PAGE_SIZE;
   const [expanded, setExpanded] = useState<string | null>(null);
 
