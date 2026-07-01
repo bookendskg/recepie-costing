@@ -9,7 +9,7 @@ create table if not exists public.export_history (
   exported_by_user_id     uuid references users(id) on delete set null,
   exporter_name_snapshot  text not null,
   exporter_email_snapshot text,
-  exporter_role_snapshot  text not null check (exporter_role_snapshot in ('admin','editor','head_chef','chef','viewer')),
+  exporter_role_snapshot  text not null check (exporter_role_snapshot in ('super_admin','admin','editor','head_chef','chef','viewer')),
   export_type             text not null,
   entity_type             text not null check (entity_type in ('recipe','report')),
   entity_id               uuid,

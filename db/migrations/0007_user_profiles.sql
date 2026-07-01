@@ -15,8 +15,12 @@
 -- This supersedes the legacy public.profiles (0002); that table is left untouched/unused.
 
 do $$ begin
-  create type app_role as enum ('admin','editor','head_chef','chef','viewer');
+  create type app_role as enum ('super_admin','admin','editor','head_chef','chef','viewer');
 exception when duplicate_object then null; end $$;
+-- Existing DBs (enum already created without super_admin): add the value. Safe/idempotent.
+-- NOTE: if this file is run inside a single transaction on an OLD database, run this one
+-- line by itself FIRST (Postgres can't use a newly-added enum value later in the same tx).
+alter type app_role add value if not exists 'super_admin';
 
 do $$ begin
   create type app_account_status as enum ('active','inactive');
@@ -192,7 +196,7 @@ begin
   update public.user_profiles set
     last_login     = now(),
     email_verified = coalesce(v_confirmed,false),
-    role           = case when v_owner then 'admin'::app_role else role end,
+    role           = case when v_owner then 'super_admin'::app_role else role end,
     approved       = case when v_owner then true else approved end
   where id = auth.uid()
   returning * into v_row;
@@ -201,7 +205,7 @@ begin
     insert into public.user_profiles (id, email, name, role, approved, email_verified, last_login)
     values (
       auth.uid(), coalesce(v_email,''), split_part(coalesce(v_email,''), '@', 1),
-      case when v_owner then 'admin'::app_role else 'viewer'::app_role end,
+      case when v_owner then 'super_admin'::app_role else 'viewer'::app_role end,
       v_owner, coalesce(v_confirmed,false), now()
     )
     returning * into v_row;

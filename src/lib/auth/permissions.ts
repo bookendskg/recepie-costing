@@ -42,9 +42,31 @@ export type Capability =
   | "settings.manage"
   // reports
   | "report.excel"
-  | "audit.view";
+  | "audit.view"
+  // role & permission management (Super Admin only)
+  | "role.manage";
 
 const MATRIX: Record<Role, Capability[]> = {
+  // Super Admin: everything, plus exclusive role/permission management.
+  super_admin: [
+    "user.manage",
+    "material.view",
+    "material.edit",
+    "yield.manage",
+    "wastage.create",
+    "recipe.create",
+    "recipe.editAll",
+    "recipe.delete",
+    "recipe.duplicate",
+    "recipe.submit",
+    "recipe.approve",
+    "recipe.viewAll",
+    "viewer.assign",
+    "settings.manage",
+    "report.excel",
+    "audit.view",
+    "role.manage",
+  ],
   admin: [
     "user.manage",
     "material.view",
@@ -98,8 +120,43 @@ const MATRIX: Record<Role, Capability[]> = {
 
 export function can(role: Role | undefined, cap: Capability): boolean {
   if (!role) return false;
+  if (role === "super_admin") return true; // Super Admin can do anything.
   return MATRIX[role].includes(cap);
 }
+
+/** The protected top-level role. Only a Super Admin manages roles/permissions. */
+export function isSuperAdmin(role: Role | undefined): boolean {
+  return role === "super_admin";
+}
+
+/** Every capability in the system (the Super Admin set, which is the superset). */
+export const ALL_CAPABILITIES: Capability[] = MATRIX.super_admin;
+
+/** The capabilities a role currently holds (for the Roles & Permissions view). */
+export function roleCapabilities(role: Role): Capability[] {
+  return MATRIX[role];
+}
+
+/** Human labels for capability keys (Roles & Permissions matrix). */
+export const CAPABILITY_LABELS: Record<Capability, string> = {
+  "user.manage": "Manage users",
+  "material.view": "View raw materials",
+  "material.edit": "Edit raw materials / prices",
+  "yield.manage": "Manage yields",
+  "wastage.create": "Record wastage",
+  "recipe.create": "Create recipes",
+  "recipe.editAll": "Edit any recipe",
+  "recipe.delete": "Delete recipes",
+  "recipe.duplicate": "Duplicate recipes",
+  "recipe.submit": "Submit for approval",
+  "recipe.approve": "Approve / reject recipes",
+  "recipe.viewAll": "View all recipes",
+  "viewer.assign": "Grant viewer access",
+  "settings.manage": "Manage settings",
+  "report.excel": "Export reports",
+  "audit.view": "View audit / price changes",
+  "role.manage": "Manage roles & permissions",
+};
 
 /** Roles that are read-only (treated like a Viewer everywhere). */
 export function isReadOnlyRole(role: Role | undefined): boolean {
@@ -109,7 +166,7 @@ export function isReadOnlyRole(role: Role | undefined): boolean {
 /** Can this user edit this specific recipe? Admin/Editor/Head Chef, else the creator. */
 export function canEditRecipe(user: User | null, recipe: Recipe): boolean {
   if (!user) return false;
-  if (user.role === "admin" || user.role === "editor" || user.role === "head_chef") return true;
+  if (user.role === "super_admin" || user.role === "admin" || user.role === "editor" || user.role === "head_chef") return true;
   return recipe.created_by === user.id;
 }
 
@@ -194,7 +251,7 @@ export function visibilityForUser(user: User): ViewVisibility {
  */
 export function canViewMasterDashboard(user: User | null): boolean {
   if (!user) return false;
-  return user.role === "admin" || user.dashboard_access === true;
+  return user.role === "super_admin" || user.role === "admin" || user.dashboard_access === true;
 }
 
 /**
@@ -204,7 +261,7 @@ export function canViewMasterDashboard(user: User | null): boolean {
  */
 export function isPendingApproval(user: User | null): boolean {
   if (!user) return false;
-  return user.approved === false && user.role !== "admin";
+  return user.approved === false && user.role !== "admin" && user.role !== "super_admin";
 }
 
 // --- Brand / outlet scope ------------------------------------------------
@@ -234,6 +291,7 @@ export function canAccessBrand(user: User | null, brand: Brand): boolean {
 }
 
 export const HOME_BY_ROLE: Record<Role, string> = {
+  super_admin: "/dashboard",
   admin: "/dashboard",
   editor: "/dashboard",
   head_chef: "/dashboard",

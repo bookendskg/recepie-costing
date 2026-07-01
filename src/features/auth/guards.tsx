@@ -23,7 +23,8 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 export function RequireRole({ roles, children }: { roles: Role[]; children: ReactNode }) {
   const user = useSession((s) => s.user);
   if (!user) return <Navigate to="/login" replace />;
-  if (!roles.includes(user.role)) {
+  // Super Admin satisfies every role requirement (it sits above Admin).
+  if (user.role !== "super_admin" && !roles.includes(user.role)) {
     return <Navigate to="/dashboard" replace />;
   }
   return <>{children}</>;

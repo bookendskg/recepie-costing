@@ -98,7 +98,7 @@ const U_VIEWER = "u-viewer";
 // Supabase; never put a real password in this file. moin's actual password is set
 // in the Supabase dashboard.
 const users: User[] = [
-  { id: "u-moin", name: "Moin (Owner)", email: "moin.bookends@gmail.com", role: "admin", status: "active", approved: true, email_verified: true, dashboard_access: true, password: "password123", created_at: SEED_TS, updated_at: SEED_TS },
+  { id: "u-moin", name: "Moin (Owner)", email: "moin.bookends@gmail.com", role: "super_admin", status: "active", approved: true, email_verified: true, dashboard_access: true, password: "password123", created_at: SEED_TS, updated_at: SEED_TS },
   { id: U_ADMIN, name: "Rahul Sharma", email: "rahul@brand.com", role: "admin", status: "active", approved: true, email_verified: true, dashboard_access: true, password: "password123", created_at: SEED_TS, updated_at: SEED_TS },
   { id: U_EDITOR, name: "Priya Patel", email: "priya@brand.com", role: "editor", status: "active", approved: true, email_verified: true, password: "password123", created_at: SEED_TS, updated_at: SEED_TS },
   { id: "u-headchef", name: "Marco Bianchi", email: "marco@brand.com", role: "head_chef", status: "active", approved: true, email_verified: true, password: "password123", created_at: SEED_TS, updated_at: SEED_TS },

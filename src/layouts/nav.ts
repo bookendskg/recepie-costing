@@ -13,6 +13,7 @@ import {
   Trash2,
   FileClock,
   Link2,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import type { Role } from "@/lib/data/types";
@@ -45,9 +46,14 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/exports", label: "Export History", icon: FileClock, group: "Admin", roles: ["admin"] },
   { to: "/access", label: "Access History", icon: Link2, group: "Admin", roles: ["admin"] },
   { to: "/settings", label: "Settings", icon: Settings, group: "Admin", roles: ["admin"] },
+  // Super-Admin-only. navForRole shows all items to super_admin, and no other role
+  // has "super_admin" in its list, so this stays hidden from regular Admin.
+  { to: "/roles", label: "Roles & Permissions", icon: ShieldCheck, group: "Admin", roles: ["super_admin"] },
 ];
 
 export function navForRole(role: Role): NavItem[] {
+  // Super Admin sees every section (it sits above Admin).
+  if (role === "super_admin") return NAV_ITEMS;
   return NAV_ITEMS.filter((item) => item.roles.includes(role));
 }
 

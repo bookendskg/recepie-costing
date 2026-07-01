@@ -5,7 +5,7 @@
 -- model (admin/editor/head_chef/chef/viewer) layers on top of Supabase Auth.
 -- The mock/localStorage layer mirrors these fields on its User object.
 
-create type user_role   as enum ('admin','editor','head_chef','chef','viewer');
+create type user_role   as enum ('super_admin','admin','editor','head_chef','chef','viewer');
 create type user_status as enum ('active','inactive');
 
 create table public.profiles (

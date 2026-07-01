@@ -17,7 +17,7 @@ create table if not exists users (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
   email       text not null unique,
-  role        text not null check (role in ('admin','editor','head_chef','chef','viewer')),
+  role        text not null check (role in ('super_admin','admin','editor','head_chef','chef','viewer')),
   status      text not null default 'active' check (status in ('active','inactive')),
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
@@ -279,8 +279,12 @@ create policy "wastage_read" on public.wastage_entries for select using (true);
 -- This supersedes the legacy public.profiles (0002); that table is left untouched/unused.
 
 do $$ begin
-  create type app_role as enum ('admin','editor','head_chef','chef','viewer');
+  create type app_role as enum ('super_admin','admin','editor','head_chef','chef','viewer');
 exception when duplicate_object then null; end $$;
+-- Existing DBs (enum already created without super_admin): add the value. Safe/idempotent.
+-- NOTE: if this file is run inside a single transaction on an OLD database, run this one
+-- line by itself FIRST (Postgres can't use a newly-added enum value later in the same tx).
+alter type app_role add value if not exists 'super_admin';
 
 do $$ begin
   create type app_account_status as enum ('active','inactive');
@@ -456,7 +460,7 @@ begin
   update public.user_profiles set
     last_login     = now(),
     email_verified = coalesce(v_confirmed,false),
-    role           = case when v_owner then 'admin'::app_role else role end,
+    role           = case when v_owner then 'super_admin'::app_role else role end,
     approved       = case when v_owner then true else approved end
   where id = auth.uid()
   returning * into v_row;
@@ -465,7 +469,7 @@ begin
     insert into public.user_profiles (id, email, name, role, approved, email_verified, last_login)
     values (
       auth.uid(), coalesce(v_email,''), split_part(coalesce(v_email,''), '@', 1),
-      case when v_owner then 'admin'::app_role else 'viewer'::app_role end,
+      case when v_owner then 'super_admin'::app_role else 'viewer'::app_role end,
       v_owner, coalesce(v_confirmed,false), now()
     )
     returning * into v_row;
@@ -566,19 +570,19 @@ $$;
 -- Materials + yields (pricing) are admin/editor only.
 create or replace function public.can_write_catalog()
 returns boolean language sql security definer stable set search_path = public as $$
-  select public.app_role() in ('admin','editor')
+  select public.app_role() in ('super_admin','admin','editor')
 $$;
 
 -- Recipes may also be edited by Head Chef (not ingredient pricing).
 create or replace function public.can_edit_recipes()
 returns boolean language sql security definer stable set search_path = public as $$
-  select public.app_role() in ('admin','editor','head_chef')
+  select public.app_role() in ('super_admin','admin','editor','head_chef')
 $$;
 
 -- Operational (wastage) data: admin/editor/head_chef.
 create or replace function public.can_access_outlet(p_outlet text)
 returns boolean language sql security definer stable set search_path = public as $$
-  select public.app_role() in ('admin','editor','head_chef')
+  select public.app_role() in ('super_admin','admin','editor','head_chef')
 $$;
 
 -- Brands a viewer may see (mirrors viewerBrands()): null accessible_brands = all.
@@ -607,7 +611,7 @@ drop policy if exists recipes_read  on public.recipes;
 drop policy if exists recipes_write on public.recipes;
 -- Staff roles see everything; viewer/chef see only approved recipes in their brands.
 create policy recipes_read on public.recipes for select to authenticated using (
-  public.app_role() in ('admin','editor','head_chef')
+  public.app_role() in ('super_admin','admin','editor','head_chef')
   or (public.app_role() in ('viewer','chef') and status = 'approved' and public.viewer_can_see_brand(brand))
 );
 create policy recipes_write on public.recipes for all to authenticated
@@ -645,11 +649,11 @@ drop policy if exists wastage_delete  on public.wastage_entries;
 create policy wastage_read   on public.wastage_entries for select to authenticated
   using (public.can_access_outlet(outlet_id));
 create policy wastage_insert on public.wastage_entries for insert to authenticated
-  with check (public.app_role() in ('admin','editor','head_chef'));
+  with check (public.app_role() in ('super_admin','admin','editor','head_chef'));
 create policy wastage_update on public.wastage_entries for update to authenticated
   using (public.can_access_outlet(outlet_id)) with check (public.can_access_outlet(outlet_id));
 create policy wastage_delete on public.wastage_entries for delete to authenticated
-  using (public.app_role() in ('admin','editor'));
+  using (public.app_role() in ('super_admin','admin','editor'));
 
 -- ── 10. RLS: history / versions / audit / settings ─────────────────────────
 alter table public.recipe_cost_history     enable row level security;
@@ -675,14 +679,14 @@ drop policy if exists admin_only_audit on public.audit_logs;
 drop policy if exists audit_read   on public.audit_logs;
 drop policy if exists audit_insert on public.audit_logs;
 -- Admins read the audit trail; any authenticated action may append to it.
-create policy audit_read   on public.audit_logs for select to authenticated using (public.app_role() = 'admin');
+create policy audit_read   on public.audit_logs for select to authenticated using (public.app_role() in ('super_admin','admin'));
 create policy audit_insert on public.audit_logs for insert to authenticated with check (true);
 
 drop policy if exists settings_read  on public.system_settings;
 drop policy if exists settings_write on public.system_settings;
 create policy settings_read  on public.system_settings for select to authenticated using (true);
 create policy settings_write on public.system_settings for all to authenticated
-  using (public.app_role() = 'admin') with check (public.app_role() = 'admin');
+  using (public.app_role() in ('super_admin','admin')) with check (public.app_role() in ('super_admin','admin'));
 
 drop policy if exists user_recipe_views_read  on public.user_recipe_views;
 drop policy if exists user_recipe_views_write on public.user_recipe_views;
@@ -701,7 +705,7 @@ create table if not exists public.export_history (
   exported_by_user_id     uuid references users(id) on delete set null,
   exporter_name_snapshot  text not null,
   exporter_email_snapshot text,
-  exporter_role_snapshot  text not null check (exporter_role_snapshot in ('admin','editor','head_chef','chef','viewer')),
+  exporter_role_snapshot  text not null check (exporter_role_snapshot in ('super_admin','admin','editor','head_chef','chef','viewer')),
   export_type             text not null,
   entity_type             text not null check (entity_type in ('recipe','report')),
   entity_id               uuid,
@@ -724,10 +728,12 @@ alter table public.export_history enable row level security;
 drop policy if exists "export_history_insert" on public.export_history;
 create policy "export_history_insert" on public.export_history
   for insert with check (auth.uid() = exported_by_user_id or exported_by_user_id is null);
+-- Admins read all; every user may read their own export rows.
 drop policy if exists "export_history_read_admin" on public.export_history;
 create policy "export_history_read_admin" on public.export_history
   for select using (
-    exists (select 1 from public.user_profiles p where p.id = auth.uid() and p.role = 'admin')
+    exported_by_user_id = auth.uid()
+    or exists (select 1 from public.user_profiles p where p.id = auth.uid() and p.role = 'admin')
   );
 -- 0011_recipe_access_links.sql
 -- §11–§19 Temporary, read-only recipe share links. Only the SHA-256 hash of the token
@@ -746,10 +752,10 @@ create table if not exists public.recipe_access_links (
   recipe_id            uuid not null references recipes(id) on delete cascade,
   granted_by_user_id   uuid references users(id) on delete set null,
   granted_by_name      text not null,
-  granted_by_role      text not null check (granted_by_role in ('admin','editor','head_chef','chef','viewer')),
+  granted_by_role      text not null check (granted_by_role in ('super_admin','admin','editor','head_chef','chef','viewer')),
   granted_to_user_id   uuid references users(id) on delete set null,
   granted_to_email     text,
-  granted_to_role      text check (granted_to_role in ('admin','editor','head_chef','chef','viewer')),
+  granted_to_role      text check (granted_to_role in ('super_admin','admin','editor','head_chef','chef','viewer')),
   granted_to_brand_id  text check (granted_to_brand_id in ('capiche','aiko')),
   granted_to_outlet_id text,
   access_type          text not null check (access_type in ('READ_ONLY','DOWNLOAD_PDF','VIEW_AND_DOWNLOAD')),
@@ -827,8 +833,8 @@ begin
     'access_type', v_link.access_type,
     'granted_by_name', v_link.granted_by_name,
     'brand', v_recipe.brand,
-    -- Strip financial columns server-side — they never leave the database.
-    'recipe', (to_jsonb(v_recipe) - 'total_cost' - 'cost_per_portion' - 'packaging_cost' - 'selling_price'),
+    -- Strip financial + costing columns server-side — they never leave the database.
+    'recipe', (to_jsonb(v_recipe) - 'total_cost' - 'cost_per_portion' - 'packaging_cost' - 'selling_price' - 'wastage_pct'),
     'ingredients', coalesce((
       select jsonb_agg(jsonb_build_object(
         'id', ri.id,

@@ -1,9 +1,10 @@
 // Domain types mirroring PRD §9.2 table specifications.
 // These map 1:1 to the Postgres schema authored in db/migrations.
 
-export type Role = "admin" | "editor" | "head_chef" | "chef" | "viewer";
+export type Role = "super_admin" | "admin" | "editor" | "head_chef" | "chef" | "viewer";
 
 export const ROLE_LABELS: Record<Role, string> = {
+  super_admin: "Super Admin",
   admin: "Admin",
   editor: "Editor",
   head_chef: "Head Chef",

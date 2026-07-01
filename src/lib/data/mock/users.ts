@@ -51,6 +51,10 @@ export const usersRepo = {
         if (db.users.some((u) => u.email.toLowerCase() === input.email.toLowerCase())) {
           throw new Error("A user with this email already exists");
         }
+        // Only a Super Admin may create another Super Admin (addendum §8/§3).
+        if (input.role === "super_admin" && db.users.find((x) => x.id === actorId)?.role !== "super_admin") {
+          throw new Error("Only a Super Admin can create a Super Admin");
+        }
         const user: User = {
           id: uid(),
           name: input.name,
@@ -96,6 +100,22 @@ export const usersRepo = {
         const disablingAdmin = u.role === "admin" && patch.status === "inactive";
         if ((demotingAdmin || disablingAdmin) && db.users.filter(isActiveAdmin).length <= 1) {
           throw new Error("Cannot remove the last remaining Admin");
+        }
+        // Super Admin safeguards (addendum §8 + §4).
+        const actor = db.users.find((x) => x.id === actorId);
+        const actorIsSuper = actor?.role === "super_admin";
+        const targetIsSuper = u.role === "super_admin";
+        const assigningSuper = patch.role === "super_admin";
+        // Only a Super Admin may assign the Super Admin role or edit a Super Admin user.
+        if ((assigningSuper || (targetIsSuper && (roleChanged || patch.status !== undefined))) && !actorIsSuper) {
+          throw new Error("Only a Super Admin can manage Super Admin users");
+        }
+        // The system must always retain at least one active Super Admin.
+        const isActiveSuper = (x: typeof u) => x.role === "super_admin" && x.status === "active" && x.approved !== false;
+        const demotingSuper = targetIsSuper && roleChanged && patch.role !== "super_admin";
+        const disablingSuper = targetIsSuper && patch.status === "inactive";
+        if ((demotingSuper || disablingSuper) && db.users.filter(isActiveSuper).length <= 1) {
+          throw new Error("This action cannot be completed because the system must retain at least one active Super Admin.");
         }
         if (patch.name !== undefined) u.name = patch.name;
         if (patch.email !== undefined) u.email = patch.email;

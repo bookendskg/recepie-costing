@@ -23,6 +23,7 @@ const ViewerAccessPage = lazy(() => import("@/features/viewers/ViewerAccessPage"
 const AuditPage = lazy(() => import("@/features/audit/AuditPage").then((m) => ({ default: m.AuditPage })));
 const ExportHistoryPage = lazy(() => import("@/features/exports/ExportHistoryPage").then((m) => ({ default: m.ExportHistoryPage })));
 const AccessHistoryPage = lazy(() => import("@/features/share/AccessHistoryPage").then((m) => ({ default: m.AccessHistoryPage })));
+const RolesPage = lazy(() => import("@/features/roles/RolesPage").then((m) => ({ default: m.RolesPage })));
 const SettingsPage = lazy(() => import("@/features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })));
 const ProfilePage = lazy(() => import("@/features/profile/ProfilePage").then((m) => ({ default: m.ProfilePage })));
 const SharedRecipePage = lazy(() => import("@/features/share/SharedRecipePage").then((m) => ({ default: m.SharedRecipePage })));
@@ -148,6 +149,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireRole roles={["admin"]}>
             <AccessHistoryPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: "roles",
+        element: (
+          <RequireRole roles={["super_admin"]}>
+            <RolesPage />
           </RequireRole>
         ),
       },

@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { userSchema, type UserValues } from "@/lib/validation/schemas";
+import { useSession } from "@/lib/auth/session";
 import { toast } from "@/components/ui/use-toast";
 import { ROLE_LABELS, type User } from "@/lib/data/types";
 import { useCreateUser, useUpdateUser } from "./hooks";
@@ -37,6 +38,8 @@ export function UserForm({
   const isEdit = !!user;
   const createMut = useCreateUser();
   const updateMut = useUpdateUser();
+  const me = useSession((s) => s.user);
+  const iAmSuper = me?.role === "super_admin";
 
   const {
     register,
@@ -131,6 +134,10 @@ export function UserForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  {/* Super Admin is assignable only by a Super Admin (addendum §8). */}
+                  {(iAmSuper || user?.role === "super_admin") && (
+                    <SelectItem value="super_admin" disabled={!iAmSuper}>{ROLE_LABELS.super_admin}</SelectItem>
+                  )}
                   <SelectItem value="admin">{ROLE_LABELS.admin}</SelectItem>
                   <SelectItem value="editor">{ROLE_LABELS.editor}</SelectItem>
                   <SelectItem value="head_chef">{ROLE_LABELS.head_chef}</SelectItem>
